@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bjpowernode.mapper.TCustomerMapper">
+  <resultMap id="BaseResultMap" type="com.bjpowernode.entity.TCustomer">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="clue_id" jdbcType="INTEGER" property="clueId" />
+    <result column="product" jdbcType="INTEGER" property="product" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="next_contact_time" jdbcType="TIMESTAMP" property="nextContactTime" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="create_by" jdbcType="INTEGER" property="createBy" />
+    <result column="edit_time" jdbcType="TIMESTAMP" property="editTime" />
+    <result column="edit_by" jdbcType="INTEGER" property="editBy" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, clue_id, product, description, next_contact_time, create_time, create_by, edit_time, 
+    edit_by
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from t_customer
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+
+
+  <resultMap id="CustomerResultMap" type="com.bjpowernode.entity.TCustomer">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="clue_id" jdbcType="INTEGER" property="clueId" />
+    <result column="product" jdbcType="INTEGER" property="product" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="next_contact_time" jdbcType="TIMESTAMP" property="nextContactTime" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="create_by" jdbcType="INTEGER" property="createBy" />
+    <result column="edit_time" jdbcType="TIMESTAMP" property="editTime" />
+    <result column="edit_by" jdbcType="INTEGER" property="editBy" />
+
+  <!--    顾客与负责人是1对1-->
+    <association property="ownerDO" javaType="com.bjpowernode.entity.TUser">
+      <id column="ownerId" jdbcType="INTEGER" property="id" />
+      <result column="ownerName" jdbcType="VARCHAR" property="name" />
+    </association>
+    <!--    顾客与活动是1对1-->
+    <association property="activityDO" javaType="com.bjpowernode.entity.TActivity">
+      <id column="activityId" jdbcType="INTEGER" property="id" />
+      <result column="activityName" jdbcType="VARCHAR" property="name" />
+    </association>
+
+  <!--    顾客与线索1对1-->
+    <association property="clueDO" javaType="com.bjpowernode.entity.TClue">
+      <id column="clueId" jdbcType="INTEGER" property="id" />
+      <result column="customerName" jdbcType="VARCHAR" property="fullName" />
+      <result column="phone" jdbcType="VARCHAR" property="phone" />
+      <result column="weixin" jdbcType="VARCHAR" property="weixin" />
+    </association>
+
+<!--    称呼 1对1-->
+    <association property="appellationDO" javaType="com.bjpowernode.entity.TDicValue">
+      <id column="appellationId" jdbcType="INTEGER" property="id" />
+      <result column="appellationName" jdbcType="VARCHAR" property="typeValue" />
+    </association>
+
+<!--    贷款 1对1-->
+    <association property="loanDO" javaType="com.bjpowernode.entity.TDicValue">
+      <id column="loanId" jdbcType="INTEGER" property="id" />
+      <result column="loanName" jdbcType="VARCHAR" property="typeValue" />
+    </association>
+
+<!--    意向状态-->
+    <association property="intentionStateDO" javaType="com.bjpowernode.entity.TDicValue">
+      <id column="intentionStateId" jdbcType="INTEGER" property="id" />
+      <result column="intentionStateName" jdbcType="VARCHAR" property="typeValue" />
+    </association>
+
+<!--    线索状态-->
+    <association property="stateDO" javaType="com.bjpowernode.entity.TDicValue">
+      <id column="stateId" jdbcType="INTEGER" property="id" />
+      <result column="stateName" jdbcType="VARCHAR" property="typeValue" />
+    </association>
+
+<!--    来源-->
+    <association property="sourceDO" javaType="com.bjpowernode.entity.TDicValue">
+      <id column="sourceId" jdbcType="INTEGER" property="id" />
+      <result column="sourceName" jdbcType="VARCHAR" property="typeValue" />
+    </association>
+
+<!--    产品-->
+    <association property="productDO" javaType="com.bjpowernode.entity.TProduct">
+      <id column="productId" jdbcType="INTEGER" property="id" />
+      <result column="productName" jdbcType="VARCHAR" property="name" />
+    </association>
+  </resultMap>
+
+
+    <select id="selectByPage" resultMap="CustomerResultMap">
+      SELECT
+        cu.*,
+        tu.id ownerId,
+        tu.`name` ownerName,
+        ta.id activityId,
+        ta.`name` activityName,
+        tc.id clueId,
+        tc.full_name customerName,
+        tdv1.id appellationId,
+        tdv1.type_value appellationName,
+        tc.phone phone,
+        tc.weixin weixin,
+        tdv2.id loanId,
+        tdv2.type_value loanName,
+        tdv3.id intentionStateId,
+        tdv3.type_value intentionStateName,
+        tdv4.id stateId,
+        tdv4.type_value stateName,
+        tdv5.id sourceId,
+        tdv5.type_value sourceName,
+        tp.id productId,
+        tp.name productName
+
+      FROM
+        `t_customer` cu
+          LEFT JOIN t_clue tc ON cu.clue_id = tc.id
+          LEFT JOIN t_user tu ON tc.owner_id=tu.id
+          LEFT JOIN t_activity ta ON tc.activity_id=ta.id
+          LEFT JOIN t_dic_value tdv1 ON tc.appellation=tdv1.id
+          LEFT JOIN t_dic_value tdv2 ON tc.need_loan=tdv2.id
+          LEFT JOIN t_dic_value tdv3 ON tc.intention_state=tdv3.id
+          LEFT JOIN t_dic_value tdv4 ON tc.state=tdv4.id
+          LEFT JOIN t_dic_value tdv5 ON tc.source=tdv5.id
+          LEFT JOIN t_product tp ON tp.id=cu.product
+      <where>
+
+        <if test="idList != null">
+          and cu.id in
+          <foreach collection="idList" item="id" open="(" separator="," close=")">
+            #{id}
+          </foreach>
+        </if>
+
+        <if test="baseQuery.filterSQL != null ">
+          ${baseQuery.filterSQL}
+        </if>
+      </where>
+    </select>
+
+  <select id="selectById" resultMap="CustomerResultMap">
+    SELECT
+      tc.*,
+      tp.id productId,
+      tp.name productName,
+      tu1.id createById,
+      tu1.name createByName,
+      tu2.id editById,
+      tu2.name editByName
+    FROM
+      t_customer tc
+        JOIN t_product tp ON tc.product = tp.id
+        LEFT JOIN t_user tu1 ON tc.create_by=tu1.id
+        LEFT JOIN t_user tu2 ON tc.edit_by=tu2.id
+
+    WHERE tc.id=#{id}
+  </select>
+    <select id="selectTotalCustomerCount" resultType="java.lang.Integer">
+      select count(1) from t_customer
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_customer
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.bjpowernode.entity.TCustomer" useGeneratedKeys="true">
+    insert into t_customer (clue_id, product, description, 
+      next_contact_time, create_time, create_by, 
+      edit_time, edit_by)
+    values (#{clueId,jdbcType=INTEGER}, #{product,jdbcType=INTEGER}, #{description,jdbcType=VARCHAR}, 
+      #{nextContactTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=INTEGER}, 
+      #{editTime,jdbcType=TIMESTAMP}, #{editBy,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.bjpowernode.entity.TCustomer" useGeneratedKeys="true">
+    insert into t_customer
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="clueId != null">
+        clue_id,
+      </if>
+      <if test="product != null">
+        product,
+      </if>
+      <if test="description != null">
+        description,
+      </if>
+      <if test="nextContactTime != null">
+        next_contact_time,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createBy != null">
+        create_by,
+      </if>
+      <if test="editTime != null">
+        edit_time,
+      </if>
+      <if test="editBy != null">
+        edit_by,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="clueId != null">
+        #{clueId,jdbcType=INTEGER},
+      </if>
+      <if test="product != null">
+        #{product,jdbcType=INTEGER},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="nextContactTime != null">
+        #{nextContactTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        #{createBy,jdbcType=INTEGER},
+      </if>
+      <if test="editTime != null">
+        #{editTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="editBy != null">
+        #{editBy,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.bjpowernode.entity.TCustomer">
+    update t_customer
+    <set>
+      <if test="clueId != null">
+        clue_id = #{clueId,jdbcType=INTEGER},
+      </if>
+      <if test="product != null">
+        product = #{product,jdbcType=INTEGER},
+      </if>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="nextContactTime != null">
+        next_contact_time = #{nextContactTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createBy != null">
+        create_by = #{createBy,jdbcType=INTEGER},
+      </if>
+      <if test="editTime != null">
+        edit_time = #{editTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="editBy != null">
+        edit_by = #{editBy,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.bjpowernode.entity.TCustomer">
+    update t_customer
+    set clue_id = #{clueId,jdbcType=INTEGER},
+      product = #{product,jdbcType=INTEGER},
+      description = #{description,jdbcType=VARCHAR},
+      next_contact_time = #{nextContactTime,jdbcType=TIMESTAMP},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_by = #{createBy,jdbcType=INTEGER},
+      edit_time = #{editTime,jdbcType=TIMESTAMP},
+      edit_by = #{editBy,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
