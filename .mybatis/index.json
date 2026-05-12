@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "timestamp": 1778567249917,
+  "projectRoot": "e:\\BaiduNetdiskDownload\\18-dlyk\\dlyk-code5-30\\dlyk-server",
+  "entries": [
+    {
+      "path": "target\\classes\\com\\bjpowernode\\config\\SecurityConfig.class",
+      "mtime": 1778566916793.5571,
+      "size": 11151
+    },
+    {
+      "path": "target\\classes\\com\\bjpowernode\\DlykServerApplication.class",
+      "mtime": 1778567246532.8447,
+      "size": 1885,
+      "mapperScan": {
+        "basePackages": [
+          "com.bjpowernode.mapper"
+        ],
+        "sourceFile": "e:\\BaiduNetdiskDownload\\18-dlyk\\dlyk-code5-30\\dlyk-server\\target\\classes\\com\\bjpowernode\\DlykServerApplication.class"
+      }
+    }
+  ]
+}

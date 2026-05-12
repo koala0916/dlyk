@@ -1,0 +1,7 @@
+# Maven 编译输出目录，不应提交到版本库
+/target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
