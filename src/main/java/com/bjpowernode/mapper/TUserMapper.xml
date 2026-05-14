@@ -225,9 +225,7 @@
       <if test="phone != null">
         phone = #{phone,jdbcType=VARCHAR},
       </if>
-      <if test="email != null">
-        email = #{email,jdbcType=VARCHAR},
-      </if>
+      email = #{email,jdbcType=VARCHAR},
       <if test="accountNoExpired != null">
         account_no_expired = #{accountNoExpired,jdbcType=INTEGER},
       </if>

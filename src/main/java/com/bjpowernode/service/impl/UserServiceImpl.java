@@ -103,6 +103,8 @@ public class UserServiceImpl implements UserService {
 //        tUser.setLoginPwd(userQuery.getLoginPwd());
         //将userQuery中的数据复制给tUser  原理：反射
         BeanUtils.copyProperties(userQuery, tUser);
+        // 邮箱选填：空串转为 null，避免 UNIQUE(email) 下多个 '' 冲突，且与库字段 NULL 语义一致
+        tUser.setEmail(StringUtils.hasText(userQuery.getEmail()) ? userQuery.getEmail().trim() : null);
 
         tUser.setCreateTime(new Date());//创建时间
         tUser.setCreateBy(LoginInfoUtil.getCurrentLoginUser().getId());
@@ -118,6 +120,8 @@ public class UserServiceImpl implements UserService {
         TUser tUser = new TUser();
         //将userQuery中的数据复制给tUser  原理：反射
         BeanUtils.copyProperties(userQuery, tUser);
+        // 邮箱选填：空串转 null，便于插入与唯一索引；编辑时可清空为 NULL
+        tUser.setEmail(StringUtils.hasText(userQuery.getEmail()) ? userQuery.getEmail().trim() : null);
 
         //判断密码是否为空
         if (StringUtils.hasText(userQuery.getLoginPwd2())) {
