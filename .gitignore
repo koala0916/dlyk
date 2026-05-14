@@ -1,6 +1,11 @@
 # Maven 编译输出目录，不应提交到版本库
 /target/
 
+# 前端子项目：依赖、构建产物与本地缓存（源码在 dlyk-front/）
+/dlyk-front/node_modules/
+/dlyk-front/dist/
+/dlyk-front/.vite/
+
 # IDE
 .idea/
 *.iml
