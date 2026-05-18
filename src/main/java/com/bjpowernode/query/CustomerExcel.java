@@ -8,63 +8,36 @@ import java.util.Date;
 @Data
 public class CustomerExcel {
 
-    @ExcelProperty("负责人")
-    private String ownerName;
+  @ExcelProperty("姓名")
+  private String name;
 
-    @ExcelProperty("所属活动")
-    private String activityName;
+  @ExcelProperty("电话")
+  private String phone;
 
-    /**
-     * 姓名
-     */
-    @ExcelProperty(value = "姓名")
-    private String fullName;
+  @ExcelProperty("年龄")
+  private Integer age;
 
-    /**
-     * 称呼
-     */
-    @ExcelProperty(value = "称呼")
-    private String appellationName;
+  @ExcelProperty("课程类型")
+  private String courseType;
 
-    /**
-     * 手机
-     */
-    @ExcelProperty(value = "手机")
-    private String phone;
+  @ExcelProperty("剩余课时")
+  private Integer remainingLessons;
 
-    /**
-     * 微信
-     */
-    @ExcelProperty(value = "微信")
-    private String weixin;
+  @ExcelProperty("课程到期时间")
+  private Date courseExpireTime;
 
-    /**
-     * 是否贷款
-     */
-    @ExcelProperty(value = "是否贷款")
-    private String needLoanName;
+  @ExcelProperty("来源")
+  private String source;
 
-    /**
-     * 意向状态
-     */
-    @ExcelProperty(value = "意向状态")
-    private String intentionStateName;
+  @ExcelProperty("是否正在学习")
+  private String studyingText;
 
-    /**
-     * 客户来源
-     */
-    @ExcelProperty(value = "客户来源")
-    private String sourceName;
+  @ExcelProperty("备注")
+  private String remark;
 
-    /**
-     * 意向产品
-     */
-    @ExcelProperty(value = "意向产品")
-    private String intentionProductName;
+  @ExcelProperty("创建时间")
+  private Date createTime;
 
-    /**
-     * 下次跟踪时间
-     */
-    @ExcelProperty(value = "下次跟踪时间")
-    private Date nextContactTime;
+  @ExcelProperty("创建人")
+  private String createByName;
 }

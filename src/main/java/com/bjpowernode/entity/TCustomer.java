@@ -1,80 +1,39 @@
 package com.bjpowernode.entity;
 
-import java.io.Serializable;
-import java.util.Date;
 import lombok.Data;
 
+import java.io.Serializable;
+import java.util.Date;
+
 /**
- * 客户表
+ * 客户表（武术学员）
  * t_customer
  */
 @Data
 public class TCustomer implements Serializable {
 
-    private TUser ownerDO;
+  private static final long serialVersionUID = 1L;
 
-    private TActivity activityDO;
+  /** 创建人信息（展示用） */
+  private TUser createByDO;
 
-    private TClue clueDO;
-
-    private TDicValue appellationDO;
-
-    private TDicValue loanDO;
-
-    private TDicValue intentionStateDO;
-
-    private TDicValue stateDO;
-
-    private TDicValue sourceDO;
-
-    private TProduct productDO;
-
-
-
-    /**
-     * 主键，自动增长，客户ID
-     */
-    private Integer id;
-
-    /**
-     * 线索ID
-     */
-    private Integer clueId;
-
-    /**
-     * 选购产品
-     */
-    private Integer product;
-
-    /**
-     * 客户描述
-     */
-    private String description;
-
-    /**
-     * 下次联系时间
-     */
-    private Date nextContactTime;
-
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-
-    /**
-     * 创建人
-     */
-    private Integer createBy;
-
-    /**
-     * 编辑时间
-     */
-    private Date editTime;
-
-    /**
-     * 编辑人
-     */
-    private Integer editBy;
-
-    private static final long serialVersionUID = 1L;
+  private Integer id;
+  private String name;
+  private String phone;
+  private Integer age;
+  /** 课程类型 */
+  private String courseType;
+  /** 剩余课时 */
+  private Integer remainingLessons;
+  /** 课程到期时间 */
+  private Date courseExpireTime;
+  private String remark;
+  private Integer createBy;
+  private Date createTime;
+  /** 来源 */
+  private String source;
+  /** 是否正在学习 0否 1是 */
+  private Integer studying;
+  /** 预留：线索ID */
+  private Integer clueId;
 }

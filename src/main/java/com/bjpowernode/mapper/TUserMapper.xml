@@ -98,6 +98,12 @@
     select id,name from t_user
   </select>
 
+  <select id="selectAllForRoleManage" resultMap="BaseResultMap">
+    select id, login_act, `name`
+    from t_user
+    order by id asc
+  </select>
+
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from t_user
     where id = #{id,jdbcType=INTEGER}

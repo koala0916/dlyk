@@ -1,62 +1,102 @@
 package com.bjpowernode.service.impl;
 
-
-import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
+import com.alibaba.excel.EasyExcel;
 import com.bjpowernode.constant.Constant;
 import com.bjpowernode.entity.TTran;
 import com.bjpowernode.mapper.TTranMapper;
 import com.bjpowernode.query.BaseQuery;
+import com.bjpowernode.query.TranExcel;
 import com.bjpowernode.query.TranQuery;
 import com.bjpowernode.service.TranService;
 import com.bjpowernode.util.LoginInfoUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @Service
 public class TranServiceImpl implements TranService {
 
-    @Resource
-    private TTranMapper tTranMapper;
+  @Resource
+  private TTranMapper tTranMapper;
 
-    /**
-     * 添加交易
-     *
-     * @param tranQuery
-     * @return
-     */
-    @Override
-    public int addTran(TranQuery tranQuery) {
-        TTran tTran = new TTran();
-        BeanUtils.copyProperties(tranQuery, tTran);
+  @Override
+  public PageInfo<TTran> getTrans(Integer current) {
+    PageHelper.startPage(current, Constant.PAGE_SIZE);
+    return new PageInfo<>(tTranMapper.selectPage(new BaseQuery()));
+  }
 
-        //交易流水号 1.不能重复  2.有规律
-        long tranId = IdUtil.getSnowflakeNextId();
+  @Override
+  public TTran getTranById(Integer id) {
+    return tTranMapper.selectDetailById(id);
+  }
 
-        tTran.setTranNo(String.valueOf(tranId));
-
-        tTran.setCreateTime(new Date());
-        tTran.setCreateBy(LoginInfoUtil.getCurrentLoginUser().getId());
-        return tTranMapper.insertSelective(tTran);
+  @Override
+  public int addTran(TranQuery q) {
+    TTran tran = buildFromQuery(q);
+    tran.setTranNo(String.valueOf(IdUtil.getSnowflakeNextId()));
+    Date now = new Date();
+    if (tran.getDealTime() == null) {
+      tran.setDealTime(now);
     }
+    tran.setCreateTime(now);
+    tran.setCreateBy(LoginInfoUtil.getCurrentLoginUser().getId());
+    return tTranMapper.insertSelective(tran);
+  }
 
-    @Override
-    public PageInfo<TTran> getTrans(Integer current) {
-        PageHelper.startPage(current, Constant.PAGE_SIZE);
-        List<TTran> tTranList = tTranMapper.selectPage(new BaseQuery());
-        PageInfo<TTran> tTranPageInfo = new PageInfo<>(tTranList);
-
-        return tTranPageInfo;
+  @Override
+  public int editTran(TranQuery q) {
+    if (q == null || q.getId() == null) {
+      return 0;
     }
+    TTran tran = buildFromQuery(q);
+    tran.setId(q.getId());
+    return tTranMapper.updateByPrimaryKeySelective(tran);
+  }
 
-    @Override
-    public TTran getTranById(Integer id) {
-        return tTranMapper.selectTranById(id);
+  @Transactional(rollbackFor = Exception.class)
+  @Override
+  public int deleteTran(Integer id) {
+    if (id == null) {
+      return 0;
     }
+    return tTranMapper.deleteByPrimaryKey(id);
+  }
+
+  @Override
+  public void exportExcel(List<String> idList, OutputStream outputStream) {
+    List<TTran> list = tTranMapper.selectPageForExport(new BaseQuery(), idList);
+    List<TranExcel> rows = new ArrayList<>();
+    for (TTran t : list) {
+      TranExcel row = new TranExcel();
+      row.setTranNo(t.getTranNo());
+      row.setStudentName(t.getStudentName());
+      row.setMoney(t.getMoney());
+      row.setCourseType(t.getCourseType());
+      row.setDealTime(t.getDealTime());
+      row.setTranRemark(t.getTranRemark());
+      row.setCreateByName(t.getCreateByDO() != null ? t.getCreateByDO().getName() : "");
+      rows.add(row);
+    }
+    EasyExcel.write(outputStream, TranExcel.class).sheet("交易列表").doWrite(rows);
+  }
+
+  private TTran buildFromQuery(TranQuery q) {
+    TTran t = new TTran();
+    t.setCustomerId(q.getCustomerId());
+    t.setStudentName(StringUtils.hasText(q.getStudentName()) ? q.getStudentName().trim() : null);
+    t.setMoney(q.getMoney());
+    t.setDealTime(q.getDealTime());
+    t.setCourseType(StringUtils.hasText(q.getCourseType()) ? q.getCourseType().trim() : null);
+    t.setTranRemark(StringUtils.hasText(q.getTranRemark()) ? q.getTranRemark().trim() : null);
+    return t;
+  }
 }

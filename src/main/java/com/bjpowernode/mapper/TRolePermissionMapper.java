@@ -14,4 +14,6 @@ public interface TRolePermissionMapper {
     int updateByPrimaryKeySelective(TRolePermission record);
 
     int updateByPrimaryKey(TRolePermission record);
+
+    int deleteByRoleId(Integer roleId);
 }

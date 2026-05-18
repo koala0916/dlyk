@@ -1,209 +1,122 @@
+<template>
+  <div class="customer-detail-wrap">
+    <h3 class="customer-detail-title">学员详情</h3>
+    <el-table
+      :data="detailTableRows"
+      border
+      stripe
+      class="customer-detail-table"
+      empty-text="暂无数据"
+    >
+      <el-table-column prop="label" label="项目" width="200" align="left" />
+      <el-table-column prop="value" label="内容" min-width="280" show-overflow-tooltip />
+    </el-table>
+
+    <h3 class="customer-detail-title">编辑记录</h3>
+    <el-table :data="editLogList" border stripe empty-text="暂无编辑记录">
+      <el-table-column type="index" label="序号" width="65" />
+      <el-table-column prop="editTime" label="编辑时间" width="180" />
+      <el-table-column prop="editByDO.name" label="编辑人" width="120" />
+      <el-table-column prop="changeContent" label="修改内容" min-width="320" show-overflow-tooltip />
+    </el-table>
+
+    <div class="customer-detail-actions">
+      <el-button type="primary" @click="goBack">返 回</el-button>
+    </div>
+  </div>
+</template>
+
 <script setup>
-import { inject, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
-import { doGet, doPost } from "../http/httpRequest.js";
-import { showMessage } from "../util/message.js";
+import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { doGet } from '../http/httpRequest'
+import { showMessage } from '../util/message'
 
-let route = useRoute()
+const route = useRoute()
+const router = useRouter()
+const customerDetail = ref({ createByDO: {} })
+const editLogList = ref([])
 
-let customerRemark = ref({})
-let customerRemarkPageInfo = ref({})
+const studyingText = (v) => {
+  if (v === 1) return '是'
+  if (v === 0) return '否'
+  return ''
+}
 
-let customerDetail = ref({
-    intentionProductDO: {},
-    createByDO: {},
-    editByDO: {}
+const detailTableRows = computed(() => {
+  const c = customerDetail.value
+  return [
+    { label: 'ID', value: c.id },
+    { label: '姓名', value: c.name },
+    { label: '电话', value: c.phone },
+    { label: '年龄', value: c.age },
+    { label: '课程类型', value: c.courseType },
+    { label: '剩余课时', value: c.remainingLessons },
+    { label: '课程到期时间', value: c.courseExpireTime },
+    { label: '来源', value: c.source },
+    { label: '是否正在学习', value: studyingText(c.studying) },
+    { label: '备注', value: c.remark },
+    { label: '创建时间', value: c.createTime },
+    { label: '创建人', value: c.createByDO?.name ?? '' },
+  ]
 })
 
 onMounted(() => {
-    loadCustomerDetail()
+  loadCustomerDetail()
+  loadEditLogs()
 })
 
 const loadCustomerDetail = () => {
-    //拿到路由地中中的userId参数
-    let id = route.params.customerId;
-
-    doGet('/api/customer/' + id, {}).then(resp => {
-        if (resp && resp.data.code === 200) {
-            customerDetail.value = resp.data.info;
-        } else {
-            showMessage('数据加载失败', 'error');
-        }
-    })
+  const id = route.params.customerId
+  doGet('/api/customer/' + id, {}).then((resp) => {
+    if (resp && resp.data.code === 200) {
+      customerDetail.value = resp.data.info
+      if (!customerDetail.value.createByDO) {
+        customerDetail.value.createByDO = {}
+      }
+    } else {
+      showMessage(resp.data.msg || '数据加载失败', 'error')
+    }
+  })
 }
 
-
-//定义变量控制弹出窗口的展示与隐藏
-let tranDialogVisible = ref(false)
-
-//创建交易弹出
-const createTran = () => {
-    tranDialogVisible.value = true
+const loadEditLogs = () => {
+  const id = route.params.customerId
+  doGet('/api/customer/' + id + '/edit-logs', {}).then((resp) => {
+    if (resp && resp.data.code === 200) {
+      editLogList.value = resp.data.info || []
+    }
+  })
 }
 
-//交易对象
-let tran = ref({})
-
-let stageOptions = ref([])
-
-//加载阶段
-const loadDicValue = (typeCode) => {
-    doGet('/api/dic/'+typeCode, { }).then(resp => {
-        if (resp && resp.data.code === 200) {
-            stageOptions.value = resp.data.info;
-        } else {
-            showMessage('数据加载失败', 'error');
-        }
-    })
+const goBack = () => {
+  const page = route.query.page
+  router.push({
+    path: '/dashboard/customer',
+    ...(page != null && String(page) !== '' ? { query: { page: String(page) } } : {}),
+  })
 }
-
-
-let flushPage = inject('flush')
-
-//交易提交
-const tranSubmit = () => {
-    doPost('/api/tran', {
-        customerId: route.params.customerId,
-        stage: tran.value.stage,
-        money: tran.value.money,
-        expectedDate: tran.value.expectedDate,
-        nextContactTime: tran.value.nextContactTime,
-        description: tran.value.description
-    }).then(resp => {
-        if (resp && resp.data.code === 200) {
-            showMessage('交易创建成功', 'success')
-            tranDialogVisible.value = false
-            flushPage()
-        } else {
-            showMessage('交易创建失败', 'error')
-        }
-    })
-}
-
 </script>
 
-<template>
-    <el-form label-width="121">
-
-        <el-form-item label="ID">
-            <!-- <div class="detail">&nbsp;{{ customerDetail.id }}</div> -->
-        </el-form-item>
-
-        <el-form-item label="客户详情">
-            <div class="detail">&nbsp;<router-link :to="'/dashboard/clue/' + customerDetail.clueId">查看客户详情</router-link>
-            </div>
-        </el-form-item>
-
-        <el-form-item label="意向产品">
-            <!-- <div class="detail">&nbsp;{{ customerDetail.productDO.name }}</div> -->
-        </el-form-item>
-
-        <el-form-item label="客户描述">
-            <div class="detail">&nbsp;{{ customerDetail.description }}</div>
-        </el-form-item>
-
-        <el-form-item label="下次跟踪时间">
-            <div class="detail">&nbsp;{{ customerDetail.nextContactTime }}</div>
-        </el-form-item>
-
-        <el-form-item label="创建时间">
-            <div class="detail">&nbsp;{{ customerDetail.createTime }}</div>
-        </el-form-item>
-
-        <!-- <el-form-item label="创建人">
-            <div class="detail">&nbsp;{{ customerDetail.createByDO.name }}</div>
-        </el-form-item> -->
-
-        <el-form-item label="编辑时间">
-            <div class="detail">&nbsp;{{ customerDetail.editTime }}</div>
-        </el-form-item>
-
-        <!-- <el-form-item label="编辑人">
-            <div class="detail">&nbsp;{{ customerDetail.editByDO.name }}</div>
-        </el-form-item> -->
-
-        <el-form-item label="跟踪记录" prop="noteContent">
-            <el-input v-model="customerRemark.noteContent" style="padding-left: 0;" :rows="8" type="textarea"
-                placeholder="请输入线索跟踪记录" />
-        </el-form-item>
-
-        <el-form-item label="跟踪方式" prop="noteWay">
-            <el-select v-model="customerRemark.noteWay" placeholder="请选择跟踪方式" style="width: 100%;padding-left: 0;"
-                clearable @click="loadDicValue('noteWay')">
-                <el-option v-for="item in noteWayOptions" :key="item.id" :label="item.typeValue" :value="item.id" />
-            </el-select>
-        </el-form-item>
-
-        <el-form-item>
-            <el-button type="success" @click="customerRemarkSubmit(clueRemarkRuleFormRef)">提 交</el-button>
-            <el-button type="primary" @click="createTran">创建交易</el-button>
-            <el-button type="success" plain @click="goBack">返 回</el-button>
-        </el-form-item>
-
-        <el-form-item>
-            <el-table :data="customerRemarkPageInfo.list" style="width: 100%" @selection-change="handSelection">
-                <el-table-column type="index" label="序号" width="65" />
-                <el-table-column property="noteContent" label="跟踪内容" />
-                <el-table-column property="createTime" label="创建时间" />
-                <el-table-column property="createByDO.name" label="创建人" />
-                <el-table-column property="editTime" label="编辑时间" />
-                <el-table-column property="editByDO.name" label="编辑人" />
-                <el-table-column label="操作" width="110">
-                    <template #default="scope">
-                        <el-button type="primary" :icon="Edit" circle @click="edit(scope.row.id)" />
-                        <el-button type="danger" :icon="Delete" circle @click="del(scope.row.id)" />
-                    </template>
-                </el-table-column>
-            </el-table>
-            <el-pagination background layout="prev, pager, next, jumper, total" :total="customerRemarkPageInfo.total"
-                :page-size="customerRemarkPageInfo.pageSize" @change="toPage" />
-        </el-form-item>
-    </el-form>
-
-
-    <!-- 创建交易对话框 -->
-    <el-dialog title="创建交易" v-model="tranDialogVisible" width="45%">
-        <el-form :model="tran" label-width="110">
-            <el-form-item label="交易金额">
-                <el-input v-model="tran.money" placeholder="请输入交易金额" />
-            </el-form-item>
-
-            <el-form-item label="预计成交时间">
-                <el-date-picker v-model="tran.expectedDate" type="datetime" placeholder="选择预计成交时间"
-                    value-format="YYYY-MM-DD HH:mm:ss" />
-            </el-form-item>
-
-            <el-form-item label="交易阶段">
-                <el-select 
-                    v-model="tran.stage" placeholder="请选择交易阶段" style="width: 100%;padding-left: 0;" clearable
-                    @click="loadDicValue('stage')"
-                   
-                >
-                    <el-option 
-                    v-for="item in stageOptions" 
-                    :key="item.id"
-                     :label="item.typeValue" 
-                     :value="item.id"
-                      :disabled="item.order>1"
-                      />
-                </el-select>
-            </el-form-item>
-
-            <el-form-item label="交易描述"> 
-                <el-input v-model="tran.description" placeholder="请输入交易描述" type="textarea" :rows="8" />
-            </el-form-item>
-
-            <el-form-item label="下次联系时间">
-                <el-date-picker v-model="tran.nextContactTime" type="datetime" placeholder="下次联系时间"
-                    value-format="YYYY-MM-DD HH:mm:ss" />
-            </el-form-item>
-        </el-form>
-
-        <template #footer>
-            <el-button type="primary" @click="tranDialogVisible = false">取 消</el-button>
-            <el-button type="success" @click="tranSubmit">确 定</el-button>
-        </template>
-    </el-dialog>
-</template>
-
-<style scoped></style>
+<style scoped>
+.customer-detail-wrap {
+  padding: 16px;
+  max-width: 960px;
+}
+.customer-detail-title {
+  margin: 16px 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.customer-detail-title:first-child {
+  margin-top: 0;
+}
+.customer-detail-table {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.customer-detail-actions {
+  margin-top: 16px;
+}
+</style>

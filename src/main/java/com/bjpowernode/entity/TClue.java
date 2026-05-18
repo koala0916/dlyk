@@ -1,147 +1,37 @@
 package com.bjpowernode.entity;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Date;
 import lombok.Data;
 
+import java.io.Serializable;
+import java.util.Date;
+
 /**
- * 线索表
- * t_clue
+ * 线索表 t_clue
  */
 @Data
 public class TClue implements Serializable {
 
-    private TUser ownerDO;//所有人
-    private TActivity activityDO;//活动
-    private TDicValue appellationDO;//称呼
-    private TDicValue loanDO;//贷款
-    private TDicValue intentionStateDO;//意向状态
-    private TProduct intentionProductDO;//意向产品
-    private TDicValue sourceDO;//来源
-    private TDicValue stateDO;//状态
+  private static final long serialVersionUID = 1L;
 
+  public static final String STATUS_UNCONTACTED = "未联系";
+  public static final String STATUS_CONTACTED = "已联系";
+  public static final String STATUS_CONVERTED = "已转客户";
 
+  private TUser createByDO;
 
-    /**
-     * 主键，自动增长，线索ID
-     */
-    private Integer id;
-
-    /**
-     * 线索所属人ID
-     */
-    private Integer ownerId;
-
-    /**
-     * 活动ID
-     */
-    private Integer activityId;
-
-    /**
-     * 姓名
-     */
-    private String fullName;
-
-    /**
-     * 称呼
-     */
-    private Integer appellation;
-
-    /**
-     * 手机号
-     */
-    private String phone;
-
-    /**
-     * 微信号
-     */
-    private String weixin;
-
-    /**
-     * QQ号
-     */
-    private String qq;
-
-    /**
-     * 邮箱
-     */
-    private String email;
-
-    /**
-     * 年龄
-     */
-    private Integer age;
-
-    /**
-     * 职业
-     */
-    private String job;
-
-    /**
-     * 年收入
-     */
-    private BigDecimal yearIncome;
-
-    /**
-     * 地址
-     */
-    private String address;
-
-    /**
-     * 是否需要贷款（0不需要，1需要）
-     */
-    private Integer needLoan;
-
-    /**
-     * 意向状态
-     */
-    private Integer intentionState;
-
-    /**
-     * 意向产品
-     */
-    private Integer intentionProduct;
-
-    /**
-     * 线索状态
-     */
-    private Integer state;
-
-    /**
-     * 线索来源
-     */
-    private Integer source;
-
-    /**
-     * 线索描述
-     */
-    private String description;
-
-    /**
-     * 下次联系时间
-     */
-    private Date nextContactTime;
-
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-
-    /**
-     * 创建人
-     */
-    private Integer createBy;
-
-    /**
-     * 编辑时间
-     */
-    private Date editTime;
-
-    /**
-     * 编辑人
-     */
-    private Integer editBy;
-
-    private static final long serialVersionUID = 1L;
+  private Integer id;
+  private String name;
+  private Integer age;
+  private String phone;
+  /** 意向课程 */
+  private String intentionCourse;
+  /** 意向强度 1-10 */
+  private Integer intentionStrength;
+  private String source;
+  private String remark;
+  private Date trialClassTime;
+  /** 线索状态：未联系、已联系、已转客户 */
+  private String clueStatus;
+  private Integer createBy;
+  private Date createTime;
 }

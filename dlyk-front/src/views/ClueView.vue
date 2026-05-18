@@ -1,143 +1,218 @@
 <template>
-    <el-button type="primary" @click="addClue">录入线索</el-button>
-    <el-button type="success" @click="clueDialogVisible = true">导入线索(Excel)</el-button>
-    <el-button type="danger" @click="batchDel">批量删除</el-button>
+  <div class="clue-toolbar">
+    <el-button type="primary" @click="addClue">添加线索</el-button>
+    <el-button type="success" @click="batchExportExcel">批量导出(Excel)</el-button>
+    <el-button type="success" @click="chooseExportExcel">选择导出(Excel)</el-button>
+  </div>
 
-    <el-table :data="cluePageInfo.list" style="width: 100%" @selection-change="selectId">
-        <el-table-column type="selection" width="50" />
-        <el-table-column type="index" label="序号" width="65" />
-        <el-table-column property="ownerDO.name" label="负责人" width="120" />
-        <el-table-column property="activityDO.name" label="所属活动" />
-        <el-table-column label="姓名">
-            <template #default="scope">
-                <a href="javascript:void(0)" @click="view(scope.row.id)">{{ scope.row.fullName }}</a>
-            </template>
-        </el-table-column>
-        <el-table-column property="phone" label="手机" width="120" />
-        <el-table-column property="weixin" label="微信" width="120" />
-        <el-table-column property="intentionStateDO.typeValue" label="意向状态" />
-        <el-table-column property="intentionProductDO.name" label="意向产品" />
-        <el-table-column property="stateDO.typeValue" label="线索状态" />
-        <el-table-column property="sourceDO.typeValue" label="线索来源" />
-        <el-table-column property="nextContactTime" label="下次联系时间" width="165" />
-        <el-table-column label="操作" width="230">
-            <template #default="scope">
-                <el-button type="primary" @click="view(scope.row.id)">详情</el-button>
-                <el-button type="success" @click="edit(scope.row.id)">编辑</el-button>
-                <el-button type="danger" @click="del(scope.row.id)">删除</el-button>
-            </template>
-        </el-table-column>
-    </el-table>
+  <el-table
+    :data="cluePageInfo.list"
+    style="width: 100%"
+    :row-class-name="tableRowClassName"
+    @selection-change="handSelection"
+  >
+    <el-table-column type="selection" width="50" />
+    <el-table-column type="index" label="序号" width="55" />
+    <el-table-column property="name" label="姓名" width="100" />
+    <el-table-column property="phone" label="电话" width="120" />
+    <el-table-column property="age" label="年龄" width="70" />
+    <el-table-column property="intentionCourse" label="意向课程" min-width="120" show-overflow-tooltip />
+    <el-table-column label="意向强度" width="100">
+      <template #default="scope">{{ scope.row.intentionStrength ?? '' }}</template>
+    </el-table-column>
+    <el-table-column property="source" label="来源" width="100" show-overflow-tooltip />
+    <el-table-column property="clueStatus" label="线索状态" width="100" />
+    <el-table-column property="trialClassTime" label="体验课时间" width="170" show-overflow-tooltip />
+    <el-table-column property="remark" label="备注" min-width="120" show-overflow-tooltip />
+    <el-table-column property="createByDO.name" label="创建人" width="100" />
+    <el-table-column property="createTime" label="创建时间" width="170" show-overflow-tooltip />
+    <el-table-column label="操作" width="200" align="center" fixed="right" class-name="clue-op-column">
+      <template #default="scope">
+        <div class="clue-row-actions">
+          <el-button type="success" :icon="View" circle @click="view(scope.row.id)" />
+          <el-button type="primary" :icon="Edit" circle @click="edit(scope.row.id)" />
+          <el-button type="danger" :icon="Delete" circle @click="del(scope.row.id)" />
+          <el-button
+            type="warning"
+            :icon="Switch"
+            circle
+            :disabled="scope.row.clueStatus === '已转客户'"
+            @click="openConvert(scope.row)"
+          />
+        </div>
+      </template>
+    </el-table-column>
+  </el-table>
 
-    <el-pagination background layout="prev, pager, next, jumper, total" :total="cluePageInfo.total"
-        :page-size="cluePageInfo.pageSize" @change="toPage" />
+  <el-pagination
+    background
+    layout="prev, pager, next, jumper, total"
+    :total="cluePageInfo.total"
+    :page-size="cluePageInfo.pageSize"
+    v-model:current-page="currentPage"
+    @current-change="toPage"
+  />
 
-
-        <!-- 弹窗 -->
-         <el-dialog v-model="clueDialogVisible" title="导入线索" width="40%" center>
-            <!-- 
-                ref 属性：给当前元素起一个名字，方便在其他地方使用
-                action 属性：指定上传的地址
-                method 属性：指定上传的方式  文件上传必须是 post
-                name 属性：指定上传的文件的名称 与后端的参数名一致
-                auto-upload 属性：指定是否自动上传  false 不自动上传
-                headers 属性：指定上传的请求头
-                on-success 属性：指定上传成功的回调函数  上传成功后，会调用这个函数  函数的参数是上传成功后的响应数据
-                limit 属性：指定上传的文件的数量  1 表示只能上传一个文件
-            -->
-            <el-upload
-                ref="uploadRef" 
-                action="http://localhost:8088/api/importExcel"
-                method="post"
-                name="excelFile"
-                :auto-upload="false"
-                :headers="token"
-                :on-success="uploadSuccess"
-                limit="1"
-            >
-                <!-- 触发 -->
-                <template #trigger>
-                    <el-button type="primary">选择excel文件</el-button>
-                </template>
-            </el-upload>
-
-            <template #footer>
-                <el-button @click="clueDialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="uploadExcel">导入</el-button>
-            </template>
-         </el-dialog>
+  <el-dialog v-model="convertVisible" title="线索转客户" width="720px" destroy-on-close>
+    <el-form :model="convertForm" label-width="120px">
+      <el-form-item label="姓名"><el-input v-model="convertForm.name" /></el-form-item>
+      <el-form-item label="电话"><el-input v-model="convertForm.phone" /></el-form-item>
+      <el-form-item label="年龄"><el-input-number v-model="convertForm.age" :min="1" :max="120" /></el-form-item>
+      <el-form-item label="课程类型"><el-input v-model="convertForm.courseType" /></el-form-item>
+      <el-form-item label="剩余课时">
+        <el-input-number v-model="convertForm.remainingLessons" :min="0" :max="9999" controls-position="both" />
+      </el-form-item>
+      <el-form-item label="课程到期时间">
+        <el-date-picker v-model="convertForm.courseExpireTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
+      </el-form-item>
+      <el-form-item label="备注"><el-input v-model="convertForm.remark" type="textarea" :rows="3" /></el-form-item>
+      <el-form-item label="来源"><el-input v-model="convertForm.source" /></el-form-item>
+      <el-form-item label="是否正在学习">
+        <el-select v-model="convertForm.studying"><el-option label="是" :value="1" /><el-option label="否" :value="0" /></el-select>
+      </el-form-item>
+      <el-form-item label="创建人"><el-input v-model="convertForm.createByName" disabled /></el-form-item>
+      <el-form-item label="交易金额"><el-input-number v-model="convertForm.tranMoney" :min="0" :precision="2" style="width: 100%" /></el-form-item>
+      <el-form-item label="交易备注"><el-input v-model="convertForm.tranRemark" type="textarea" :rows="2" /></el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="convertVisible = false">取消</el-button>
+      <el-button type="primary" :loading="convertLoading" @click="submitConvert">确定</el-button>
+    </template>
+  </el-dialog>
 </template>
 
-
 <script setup>
+import { View, Edit, Delete, Switch } from '@element-plus/icons-vue'
+import { ref, onMounted, inject } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { doGet, doDelete, doPost, download } from '../http/httpRequest'
+import { showMessage, confirmMessage } from '../util/message'
+import { saveAs } from 'file-saver'
 
-import {onMounted,inject, ref } from "vue";
-import { doGet } from "../http/httpRequest";
-import { TOKEN_NAME } from "../util/constant";
-import { showMessage } from "../util/message";
-import { useRouter } from "vue-router";
+const cluePageInfo = ref({})
+const currentPage = ref(1)
+const router = useRouter()
+const route = useRoute()
+const flushPage = inject('flush')
 
-//线索分页对象
-let cluePageInfo = ref({})
+const convertVisible = ref(false)
+const convertLoading = ref(false)
+const convertForm = ref({ studying: 1 })
 
-//控制弹窗的变量
-let clueDialogVisible = ref(false)
+let idArray = []
+
+const resolvePage = () => {
+  const p = Number(route.query.page)
+  return Number.isFinite(p) && p >= 1 ? Math.floor(p) : 1
+}
 
 onMounted(() => {
-    loadClueList(1)
-})
-//分页查询线索信息
-const loadClueList = (current) => {
-    doGet('/api/clue', { current:current }).then(resp => {
-        if (resp.data.code == 200) {
-            cluePageInfo.value = resp.data.info
-        }else{
-            showMessage(resp.data.message, 'error')
-        }
-    })
-}
-
-//分页查询
-const toPage = (current) => {
-    loadClueList(current)
-}
-
-
-//上传excel文件 携带token
-const token = ref({
-    'Authorization': sessionStorage.getItem(TOKEN_NAME)
+  currentPage.value = resolvePage()
+  loadList(currentPage.value)
 })
 
-//上传的ref对象
-const uploadRef = ref()
-
-//上传excel文件
-const uploadExcel = () => {
-    //上传文件
-    uploadRef.value.submit()
-}
-
-
-let flushPage = inject('flush')
-
-//上传成功的回调函数  上传成功后，会调用这个函数  函数的参数是上传成功后的响应数据
-const uploadSuccess = (resp) => {
-    //这里的回调函数（钩子函数）是element plus提供的 ，所以返回的resp与与之前(axios)不一致
-    if (resp.code == 200) {
-        showMessage('导入成功', 'success')
-        //局部刷新页面
-        flushPage()
-    }else{
-        showMessage('导入失败','error')
+const loadList = (current) => {
+  doGet('/api/clues', { current }).then((resp) => {
+    if (resp.data.code === 200) {
+      cluePageInfo.value = resp.data.info
+    } else {
+      showMessage(resp.data.msg || '加载失败', 'error')
     }
+  })
 }
 
-let router = useRouter()
-//查看详情
-const view = (id) => {
-    //路由到详情页面  携带id
-    router.push('/dashboard/clue/'+id)
+const toPage = (current) => {
+  router.replace({ path: '/dashboard/clue', query: { page: String(current) } })
+  loadList(current)
+}
+
+const isWarningRow = (row) => {
+  if (row.clueStatus === '已转客户') return false
+  if (!row.trialClassTime) return false
+  const diff = (new Date(row.trialClassTime).getTime() - Date.now()) / (86400000)
+  return diff >= 0 && diff < 7
+}
+
+const tableRowClassName = ({ row }) => (isWarningRow(row) ? 'clue-row-warning' : '')
+
+const handSelection = (rows) => {
+  idArray = rows.map((r) => r.id)
+}
+
+const batchExportExcel = () => {
+  download('/api/clue/exportExcel', { ids: '' }).then((resp) => saveAs(new Blob([resp.data]), '线索列表.xlsx'))
+}
+
+const chooseExportExcel = () => {
+  if (!idArray.length) {
+    showMessage('请选择要导出的线索', 'warning')
+    return
+  }
+  download('/api/clue/exportExcel', { ids: idArray.join(',') }).then((resp) => saveAs(new Blob([resp.data]), '线索列表.xlsx'))
+}
+
+const addClue = () => router.push({ path: '/dashboard/clue/input', query: { page: String(currentPage.value) } })
+const view = (id) => router.push({ path: '/dashboard/clue/' + id, query: { page: String(currentPage.value) } })
+const edit = (id) => router.push({ path: '/dashboard/clue/edit/' + id, query: { page: String(currentPage.value) } })
+
+const del = (id) => {
+  confirmMessage('确认删除该线索吗？').then(() => {
+    doDelete('/api/clue/' + id).then((resp) => {
+      if (resp.data.code === 200) {
+        showMessage(resp.data.msg || '删除成功', 'success')
+        flushPage()
+      } else {
+        showMessage(resp.data.msg || '删除失败', 'error')
+      }
+    })
+  }).catch(() => {})
+}
+
+const openConvert = (row) => {
+  convertForm.value = {
+    clueId: row.id,
+    name: row.name,
+    phone: row.phone,
+    age: row.age,
+    courseType: row.intentionCourse,
+    source: row.source,
+    remark: row.remark,
+    studying: 1,
+    createBy: row.createBy,
+    createByName: row.createByDO?.name ?? '',
+    remainingLessons: null,
+    courseExpireTime: null,
+    tranMoney: null,
+    tranRemark: '',
+  }
+  convertVisible.value = true
+}
+
+const submitConvert = () => {
+  convertLoading.value = true
+  const payload = { ...convertForm.value }
+  delete payload.createByName
+  doPost('/api/clue/convert', payload).then((resp) => {
+    convertLoading.value = false
+    if (resp.data.code === 200) {
+      showMessage(resp.data.msg || '转客户成功', 'success')
+      convertVisible.value = false
+      loadList(currentPage.value)
+    } else {
+      showMessage(resp.data.msg || '转客户失败', 'error')
+    }
+  }).catch(() => {
+    convertLoading.value = false
+    showMessage('网络异常，转客户失败', 'error')
+  })
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.clue-toolbar { margin-bottom: 12px; }
+.clue-toolbar .el-button + .el-button { margin-left: 8px; }
+.clue-row-actions { display: inline-flex; flex-wrap: nowrap; gap: 6px; white-space: nowrap; }
+.clue-row-actions :deep(.el-button + .el-button) { margin-left: 0; }
+:deep(.clue-row-warning) { background-color: #fff9e6 !important; }
+:deep(.clue-row-warning:hover > td) { background-color: #fff3cc !important; }
+</style>

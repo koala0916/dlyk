@@ -32,4 +32,6 @@ public interface TUserMapper {
     int batchDeleteUser(List<String> idList);
 
     List<TUser> selectOwners();
+
+    List<TUser> selectAllForRoleManage();
 }

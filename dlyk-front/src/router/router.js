@@ -13,6 +13,10 @@ export const router = createRouter({
             component:()=>import('../views/DashboardView.vue'),
             children:[
                 {
+                    path:'role',
+                    component:()=>import('../views/RoleManageView.vue')
+                },
+                {
                     path:'user',
                     component:()=>import('../views/UserView.vue')
                 },
@@ -41,6 +45,14 @@ export const router = createRouter({
                     component:()=>import('../views/ClueView.vue')
                 },
                 {
+                    path:'clue/input',
+                    component:()=>import('../views/ClueInputView.vue')
+                },
+                {
+                    path:'clue/edit/:clueId',
+                    component:()=>import('../views/ClueInputView.vue')
+                },
+                {
                     path:'clue/:clueId',
                     component:()=>import('../views/ClueDetailView.vue')
                 },
@@ -49,12 +61,28 @@ export const router = createRouter({
                     component:()=>import('../views/CustomerView.vue')
                 },
                 {
+                    path:'customer/input',
+                    component:()=>import('../views/CustomerInputView.vue')
+                },
+                {
+                    path:'customer/edit/:customerId',
+                    component:()=>import('../views/CustomerInputView.vue')
+                },
+                {
                     path:'customer/:customerId',
                     component:()=>import('../views/CustomerDetailView.vue')
                 },
                 {
                     path:'tran',
                     component:()=>import('../views/TranView.vue')
+                },
+                {
+                    path:'tran/input',
+                    component:()=>import('../views/TranInputView.vue')
+                },
+                {
+                    path:'tran/edit/:tranId',
+                    component:()=>import('../views/TranInputView.vue')
                 },
                 {
                     path:'tran/:tranId',

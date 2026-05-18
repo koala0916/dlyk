@@ -1,56 +1,96 @@
 package com.bjpowernode.controller;
 
 import com.bjpowernode.entity.TClue;
+import com.bjpowernode.entity.TClueEditLog;
+import com.bjpowernode.query.ClueConvertQuery;
+import com.bjpowernode.query.ClueQuery;
 import com.bjpowernode.result.Result;
 import com.bjpowernode.service.ClueService;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
 
-/**
- * 线索
- */
 @RestController
 public class ClueController {
 
-    @Resource
-    private ClueService clusterService;
+  @Resource
+  private ClueService clueService;
 
-    /**
-     * 分页查询
-     */
-    @GetMapping("/api/clue")
-    public Result queryClueByPage(Integer current){
-        PageInfo<TClue> pageInfo = clusterService.getClueByPage(current);
+  @GetMapping("/api/clues")
+  public Result clues(Integer current) {
+    PageInfo<TClue> pageInfo = clueService.getClueByPage(current);
+    return Result.OK(pageInfo);
+  }
 
-        return Result.OK(pageInfo);
+  @GetMapping("api/clue/{id}")
+  public Result getClueById(@PathVariable("id") Integer id) {
+    return Result.OK(clueService.getClueById(id));
+  }
+
+  @GetMapping("api/clue/{id}/edit-logs")
+  public Result editLogs(@PathVariable("id") Integer clueId) {
+    List<TClueEditLog> logs = clueService.listEditLogs(clueId);
+    return Result.OK(logs);
+  }
+
+  @PostMapping("/api/clue/add")
+  public Result addClue(ClueQuery clueQuery) {
+    try {
+      int rows = clueService.addClue(clueQuery);
+      return rows > 0 ? Result.OK("添加成功") : Result.FAIL("添加失败");
+    } catch (RuntimeException e) {
+      return Result.FAIL(e.getMessage());
     }
+  }
 
-
-    /**
-     * excel上传
-     * 文件上传的参数MultipartFile
-     * excelFile与前端upload中的name属性对应
-     */
-    @PostMapping("api/importExcel")
-    public Result importExcel(MultipartFile excelFile) throws IOException {
-        clusterService.importExcel(excelFile.getInputStream());
-        return Result.OK();
+  @PutMapping("/api/clue")
+  public Result editClue(ClueQuery clueQuery) {
+    try {
+      int rows = clueService.editClue(clueQuery);
+      return rows > 0 ? Result.OK("保存成功") : Result.FAIL("保存失败");
+    } catch (RuntimeException e) {
+      return Result.FAIL(e.getMessage());
     }
+  }
 
-    /**
-     * 查询线索明细
-     */
-    @GetMapping("api/clue/{id}")
-    public Result queryClueById(@PathVariable("id") Integer id) {
-        TClue tClue = clusterService.getClueById(id);
-
-        return Result.OK(tClue);
+  @DeleteMapping("/api/clue/{id}")
+  public Result deleteClue(@PathVariable("id") Integer id) {
+    try {
+      int rows = clueService.deleteClue(id);
+      return rows > 0 ? Result.OK("删除成功") : Result.FAIL("删除失败");
+    } catch (RuntimeException e) {
+      return Result.FAIL(e.getMessage());
     }
+  }
+
+  @PostMapping("/api/clue/convert")
+  public Result convertToCustomer(@RequestBody ClueConvertQuery query) {
+    try {
+      clueService.convertToCustomer(query);
+      return Result.OK("转客户成功，已同步创建交易");
+    } catch (RuntimeException e) {
+      return Result.FAIL(e.getMessage());
+    }
+  }
+
+  @GetMapping("/api/clue/exportExcel")
+  public void exportExcel(String ids, HttpServletResponse response) throws IOException {
+    List<String> idList = null;
+    if (StringUtils.hasText(ids)) {
+      idList = Arrays.asList(ids.split(","));
+    }
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setCharacterEncoding("utf-8");
+    response.setHeader("Content-disposition",
+        "attachment;filename*=utf-8''" + System.currentTimeMillis() + ".xlsx");
+    OutputStream outputStream = response.getOutputStream();
+    clueService.exportExcel(idList, outputStream);
+  }
 }

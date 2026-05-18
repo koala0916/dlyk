@@ -1,28 +1,25 @@
 package com.bjpowernode.mapper;
 
-import com.bjpowernode.annotation.DataScope;
 import com.bjpowernode.entity.TCustomer;
 import com.bjpowernode.query.BaseQuery;
 
 import java.util.List;
 
 public interface TCustomerMapper {
-    int deleteByPrimaryKey(Integer id);
 
-    int insert(TCustomer record);
+  int deleteByPrimaryKey(Integer id);
 
-    int insertSelective(TCustomer record);
+  int insert(TCustomer record);
 
-    TCustomer selectByPrimaryKey(Integer id);
+  int insertSelective(TCustomer record);
 
-    int updateByPrimaryKeySelective(TCustomer record);
+  TCustomer selectByPrimaryKey(Integer id);
 
-    int updateByPrimaryKey(TCustomer record);
+  int updateByPrimaryKeySelective(TCustomer record);
 
-    @DataScope(tableAlias = "tc", columnName = "owner_id")
-    List<TCustomer> selectByPage(BaseQuery baseQuery,List<String> idList);
+  List<TCustomer> selectByPage(BaseQuery baseQuery, List<String> idList);
 
-    TCustomer selectById(Integer customerId);
+  TCustomer selectDetailById(Integer customerId);
 
-    Integer selectTotalCustomerCount();
+  Integer selectTotalCustomerCount();
 }

@@ -60,4 +60,32 @@
       role_id = #{roleId,jdbcType=INTEGER}
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <delete id="deleteByUserIdAndRoleId">
+    delete from t_user_role
+    where user_id = #{userId,jdbcType=INTEGER}
+      and role_id = #{roleId,jdbcType=INTEGER}
+  </delete>
+
+  <select id="countByUserIdAndRoleId" resultType="int">
+    select count(1)
+    from t_user_role
+    where user_id = #{userId,jdbcType=INTEGER}
+      and role_id = #{roleId,jdbcType=INTEGER}
+  </select>
+
+  <delete id="deleteByRoleId">
+    delete from t_user_role
+    where role_id = #{roleId,jdbcType=INTEGER}
+  </delete>
+
+  <select id="selectUsersByRoleId" resultType="com.bjpowernode.vo.RoleManageUserItem">
+    select
+      tu.id as userId,
+      tu.name as name
+    from t_user_role tur
+      inner join t_user tu on tur.user_id = tu.id
+    where tur.role_id = #{roleId,jdbcType=INTEGER}
+    order by tu.id asc
+  </select>
 </mapper>

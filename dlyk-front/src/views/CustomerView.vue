@@ -1,113 +1,240 @@
+<template>
+  <!-- 顶部操作区：添加客户（蓝）+ 导出 Excel（绿） -->
+  <div class="customer-toolbar">
+    <el-button type="primary" @click="addCustomer">添加客户</el-button>
+    <el-button type="success" @click="batchExportExcel">批量导出(Excel)</el-button>
+    <el-button type="success" @click="chooseExportExcel">选择导出(Excel)</el-button>
+  </div>
+
+  <!-- 学员列表表格，支持多选、行高亮 -->
+  <el-table
+    :data="customerPageInfo.list"
+    style="width: 100%"
+    :row-class-name="tableRowClassName"
+    @selection-change="handSelection"
+  >
+    <el-table-column type="selection" width="50" />
+    <el-table-column type="index" label="序号" width="55" />
+    <el-table-column property="name" label="姓名" width="100" />
+    <el-table-column property="phone" label="电话" width="120" />
+    <el-table-column property="age" label="年龄" width="70" />
+    <el-table-column property="courseType" label="课程类型" min-width="120" show-overflow-tooltip />
+    <el-table-column property="remainingLessons" label="剩余课时" width="90" />
+    <el-table-column property="courseExpireTime" label="课程到期时间" width="170" show-overflow-tooltip />
+    <el-table-column property="source" label="来源" width="100" show-overflow-tooltip />
+    <el-table-column label="是否正在学习" width="120">
+      <template #default="scope">
+        {{ studyingLabel(scope.row.studying) }}
+      </template>
+    </el-table-column>
+    <el-table-column property="remark" label="备注" min-width="140" show-overflow-tooltip />
+    <el-table-column property="createByDO.name" label="创建人" width="100" />
+    <el-table-column property="createTime" label="创建时间" width="170" show-overflow-tooltip />
+    <!-- 操作列固定宽度并禁止换行，保证三个圆形按钮始终同一行 -->
+    <el-table-column label="操作" width="160" align="center" fixed="right" class-name="customer-op-column">
+      <template #default="scope">
+        <div class="customer-row-actions">
+          <el-button type="success" :icon="View" circle @click="view(scope.row.id)" />
+          <el-button type="primary" :icon="Edit" circle @click="edit(scope.row.id)" />
+          <el-button type="danger" :icon="Delete" circle @click="del(scope.row.id)" />
+        </div>
+      </template>
+    </el-table-column>
+  </el-table>
+
+  <el-pagination
+    background
+    layout="prev, pager, next, jumper, total"
+    :total="customerPageInfo.total"
+    :page-size="customerPageInfo.pageSize"
+    v-model:current-page="currentPage"
+    @current-change="toPage"
+  />
+</template>
+
 <script setup>
-
-import { ref, onMounted } from 'vue'
-import { doGet, download } from '../http/httpRequest'
-import { showMessage } from '../util/message'
+// 引入 Element Plus 图标
+import { View, Edit, Delete } from '@element-plus/icons-vue'
+// 引入 Vue 组合式 API
+import { ref, onMounted, inject } from 'vue'
+// 引入路由
+import { useRouter, useRoute } from 'vue-router'
+// 引入 HTTP 与消息工具
+import { doGet, doDelete, download } from '../http/httpRequest'
+import { showMessage, confirmMessage } from '../util/message'
+// 引入文件保存（Excel 下载）
 import { saveAs } from 'file-saver'
-import { useRouter } from 'vue-router'
 
-//客户分页查询返回的对象，初始值是空 
-let customerPageInfo = ref({})
+// 分页数据对象
+const customerPageInfo = ref({})
+// 当前页码，与 URL query.page 同步
+const currentPage = ref(1)
+const router = useRouter()
+const route = useRoute()
+// 注入 Dashboard 提供的局部刷新方法
+const flushPage = inject('flush')
 
-//页面渲染后就加载客户列表数据，那么触发vue生命周期函数钩子
+// 从路由解析页码
+const resolvePageFromRoute = () => {
+  const p = Number(route.query.page)
+  return Number.isFinite(p) && p >= 1 ? Math.floor(p) : 1
+}
+
+// 页面挂载后加载列表
 onMounted(() => {
-    loadCustomerList(1) //页面渲染时，默认加载第一页数据
+  currentPage.value = resolvePageFromRoute()
+  loadCustomerList(currentPage.value)
 })
 
-//加载客户列表的函数
+// 请求分页列表
 const loadCustomerList = (current) => {
-    doGet('/api/customers', {
-        current: current, //当前是第几页，前面是参数名，后面是参数值
-    }).then(resp => {
-        if (resp.data.code === 200) {
-            customerPageInfo.value = resp.data.info;
-        } else {
-            showMessage('数据加载失败', 'error');
-        }
-    })
+  doGet('/api/customers', { current }).then((resp) => {
+    if (resp.data.code === 200) {
+      customerPageInfo.value = resp.data.info
+      const pn = resp.data.info.pageNum
+      if (pn != null && pn >= 1 && pn !== currentPage.value) {
+        currentPage.value = pn
+        router.replace({ path: '/dashboard/customer', query: { page: String(pn) } })
+      }
+    } else {
+      showMessage(resp.data.msg || '数据加载失败', 'error')
+    }
+  })
 }
 
-//分页函数，触发change事件的时候，会自动传currentPage, pageSize这两个参数
-const toPage = (currentPage, pageSize) => {
-    loadCustomerList(currentPage);
+// 翻页
+const toPage = (current) => {
+  router.replace({ path: '/dashboard/customer', query: { page: String(current) } })
+  loadCustomerList(current)
 }
 
+// 是否正在学习：显示文字
+const studyingLabel = (studying) => {
+  if (studying === 1) return '是'
+  if (studying === 0) return '否'
+  return ''
+}
 
-//批量导出Excel
+// 判断是否需要淡红底色：仅「正在学习」为是(1) 时才预警；已停课(0) 不再标红
+const isWarningRow = (row) => {
+  if (row.studying !== 1) {
+    return false
+  }
+  const lessons = row.remainingLessons
+  if (lessons != null && lessons > 0 && lessons <= 3) {
+    return true
+  }
+  if (!row.courseExpireTime) {
+    return false
+  }
+  const expireMs = new Date(row.courseExpireTime).getTime()
+  const diffDays = (expireMs - Date.now()) / (24 * 60 * 60 * 1000)
+  return diffDays < 15
+}
+
+// el-table 行样式回调
+const tableRowClassName = ({ row }) => {
+  return isWarningRow(row) ? 'customer-row-warning' : ''
+}
+
+// 批量导出全部
 const batchExportExcel = () => {
-    download('/api/exportExcel', { ids: '' }).then(resp => {
-        //resp.data 后端返回的二进制数据，将二进制数据转换为blob对象
-        saveAs(new Blob([resp.data]), '客户列表.xlsx')
-    })
+  download('/api/exportExcel', { ids: '' }).then((resp) => {
+    saveAs(new Blob([resp.data]), '学员列表.xlsx')
+  })
 }
 
-
-//存放选中数据的id数组
+// 选中行的 id 数组
 let idArray = []
 
-//勾选或取消勾选时触发的事件
 const handSelection = (item) => {
-    //每次勾选或取消勾选时，都清空数组
-    idArray = []
-
-    //将选中的数据id添加到数组中
-    for (let index in item) {
-        idArray.push(item[index].id)
-    }
+  idArray = []
+  for (const index in item) {
+    idArray.push(item[index].id)
+  }
 }
 
-//选择导出Excel
+// 按选中行导出
 const chooseExportExcel = () => {
-    if (idArray.length == 0) {
-        showMessage('请选择要导出的客户', 'warning')
-        return
-    }
-
-    //将数组转换为字符串，用逗号分隔   [1,2,3] => '1,2,3'
-    let ids = idArray.join(',')
-    download('/api/exportExcel', { ids: ids }).then(resp => {
-        //resp.data 后端返回的二进制数据，将二进制数据转换为blob对象
-        saveAs(new Blob([resp.data]), '客户列表.xlsx')
-    })
+  if (idArray.length === 0) {
+    showMessage('请选择要导出的客户', 'warning')
+    return
+  }
+  const ids = idArray.join(',')
+  download('/api/exportExcel', { ids }).then((resp) => {
+    saveAs(new Blob([resp.data]), '学员列表.xlsx')
+  })
 }
 
-let router = useRouter()
-//查看客户详情
+// 添加客户
+const addCustomer = () => {
+  router.push({
+    path: '/dashboard/customer/input',
+    query: { page: String(currentPage.value) },
+  })
+}
+
+// 查看详情
 const view = (id) => {
-    router.push('/dashboard/customer/' + id)
+  router.push({
+    path: '/dashboard/customer/' + id,
+    query: { page: String(currentPage.value) },
+  })
+}
+
+// 编辑
+const edit = (id) => {
+  router.push({
+    path: '/dashboard/customer/edit/' + id,
+    query: { page: String(currentPage.value) },
+  })
+}
+
+// 删除
+const del = (id) => {
+  confirmMessage('确认删除该客户吗？').then(() => {
+    doDelete('/api/customer/' + id).then((resp) => {
+      if (resp.data.code === 200) {
+        showMessage(resp.data.msg || '删除成功', 'success')
+        flushPage()
+      } else {
+        showMessage(resp.data.msg || '删除失败', 'error')
+      }
+    })
+  }).catch(() => {})
 }
 </script>
 
-<template>
-    <el-button type="primary" @click="batchExportExcel">批量导出(Excel)</el-button>
-    <el-button type="success" @click="chooseExportExcel">选择导出(Excel)</el-button>
-
-    <el-table :data="customerPageInfo.list" style="width: 100%" @selection-change="handSelection">
-        <el-table-column type="selection" width="50" />
-        <el-table-column type="index" label="序号" width="55" />
-        <el-table-column property="ownerDO.name" label="负责人" />
-        <el-table-column property="activityDO.name" label="所属活动" />
-        <el-table-column property="clueDO.fullName" label="姓名">
-            <template #default="scope">
-                <a href="javascript:void(0)" @click="view(scope.row.id)">{{ scope.row.clueDO.fullName }}</a>
-            </template>
-        </el-table-column>
-        <el-table-column property="appellationDO.typeValue" label="称呼" />
-        <el-table-column property="clueDO.phone" label="手机" />
-        <el-table-column property="clueDO.weixin" label="微信" />
-        <el-table-column property="loanDO.typeValue" label="是否贷款" />
-        <el-table-column property="intentionStateDO.typeValue" label="意向状态" />
-        <el-table-column property="sourceDO.typeValue" label="客户来源" />
-        <el-table-column property="productDO.name" label="意向产品" />
-        <el-table-column property="nextContactTime" label="下次跟踪时间" />
-        <el-table-column label="操作">
-            <template #default="scope">
-                <el-button type="primary" @click="view(scope.row.id)">详情</el-button>
-            </template>
-        </el-table-column>
-    </el-table>
-    <el-pagination background layout="prev, pager, next, jumper, total" :total="customerPageInfo.total"
-        :page-size="customerPageInfo.pageSize" @change="toPage" />
-</template>
-
-<style scoped></style>
+<style scoped>
+.customer-toolbar {
+  margin-bottom: 12px;
+}
+.customer-toolbar .el-button + .el-button {
+  margin-left: 8px;
+}
+/* 预警行：淡红色背景 */
+:deep(.customer-row-warning) {
+  background-color: #fde8e8 !important;
+}
+:deep(.customer-row-warning:hover > td) {
+  background-color: #fcd4d4 !important;
+}
+/* 操作列：横向排列、不换行 */
+.customer-row-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+/* 缩小按钮默认左边距，避免挤换行 */
+.customer-row-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+/* 操作列单元格减少内边距，给按钮留足横向空间 */
+:deep(.customer-op-column .cell) {
+  overflow: visible;
+  white-space: nowrap;
+}
+</style>

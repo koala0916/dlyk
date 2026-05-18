@@ -21,4 +21,9 @@ public interface TPermissionMapper {
     List<TPermission> selectByUserId(Integer userId);
 
     List<TPermission> selectMenuPermissionListById(Integer id);
+
+    /**
+     * 按 RBAC 查询当前用户拥有权限的全部菜单（扁平列表，不含未授权的菜单）
+     */
+    List<TPermission> selectMenuPermissionsByUserId(Integer userId);
 }

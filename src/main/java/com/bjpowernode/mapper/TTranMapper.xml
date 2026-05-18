@@ -1,244 +1,115 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bjpowernode.mapper.TTranMapper">
+
   <resultMap id="BaseResultMap" type="com.bjpowernode.entity.TTran">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="tran_no" jdbcType="VARCHAR" property="tranNo" />
-    <result column="customer_id" jdbcType="INTEGER" property="customerId" />
-    <result column="money" jdbcType="DECIMAL" property="money" />
-    <result column="expected_date" jdbcType="TIMESTAMP" property="expectedDate" />
-    <result column="stage" jdbcType="INTEGER" property="stage" />
-    <result column="description" jdbcType="VARCHAR" property="description" />
-    <result column="next_contact_time" jdbcType="TIMESTAMP" property="nextContactTime" />
-    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
-    <result column="create_by" jdbcType="INTEGER" property="createBy" />
-    <result column="edit_time" jdbcType="TIMESTAMP" property="editTime" />
-    <result column="edit_by" jdbcType="INTEGER" property="editBy" />
+    <id column="id" property="id" />
+    <result column="tran_no" property="tranNo" />
+    <result column="customer_id" property="customerId" />
+    <result column="student_name" property="studentName" />
+    <result column="money" property="money" />
+    <result column="create_by" property="createBy" />
+    <result column="deal_time" property="dealTime" />
+    <result column="course_type" property="courseType" />
+    <result column="tran_remark" property="tranRemark" />
+    <result column="create_time" property="createTime" />
   </resultMap>
+
+  <resultMap id="DetailResultMap" type="com.bjpowernode.entity.TTran" extends="BaseResultMap">
+    <association property="createByDO" javaType="com.bjpowernode.entity.TUser">
+      <id column="createByUserId" property="id" />
+      <result column="createByUserName" property="name" />
+    </association>
+  </resultMap>
+
   <sql id="Base_Column_List">
-    id, tran_no, customer_id, money, expected_date, stage, description, next_contact_time, 
-    create_time, create_by, edit_time, edit_by
+    id, tran_no, customer_id, student_name, money, create_by, deal_time, course_type, tran_remark, create_time
   </sql>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select 
-    <include refid="Base_Column_List" />
-    from t_tran
-    where id = #{id,jdbcType=INTEGER}
+
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from t_tran where id = #{id}
   </select>
 
-  <resultMap id="TranResultMap" type="com.bjpowernode.entity.TTran">
-    <id column="id" jdbcType="INTEGER" property="id" />
-    <result column="tran_no" jdbcType="VARCHAR" property="tranNo" />
-    <result column="customer_id" jdbcType="INTEGER" property="customerId" />
-    <result column="money" jdbcType="DECIMAL" property="money" />
-    <result column="expected_date" jdbcType="TIMESTAMP" property="expectedDate" />
-    <result column="stage" jdbcType="INTEGER" property="stage" />
-    <result column="description" jdbcType="VARCHAR" property="description" />
-    <result column="next_contact_time" jdbcType="TIMESTAMP" property="nextContactTime" />
-    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
-    <result column="create_by" jdbcType="INTEGER" property="createBy" />
-    <result column="edit_time" jdbcType="TIMESTAMP" property="editTime" />
-    <result column="edit_by" jdbcType="INTEGER" property="editBy" />
-
-    <!--    顾客名称 1对一-->
-    <association property="clueDO" javaType="com.bjpowernode.entity.TClue">
-      <result column="customerId" property="id" />
-      <result column="customerName" property="fullName" />
-    </association>
-
-
-    <association property="stageDO" javaType="com.bjpowernode.entity.TDicValue">
-      <result column="stageId" property="id" />
-      <result column="stageName" property="typeValue" />
-      <result column="stageOrder" property="order" />
-    </association>
-  </resultMap>
-
-    <select id="selectPage" resultMap="TranResultMap">
-      SELECT
-        tt.*,
-        tcl.id customerId,
-        tcl.full_name customerName,
-        tdv.id stageId,
-        tdv.type_value stageName
-      FROM
-        `t_tran` tt
-          JOIN t_customer tc ON tt.customer_id = tc.id
-          JOIN t_clue tcl ON tc.clue_id=tcl.id
-          JOIN t_dic_value tdv ON tt.stage=tdv.id
-      <where>
-        ${filterSQL}
-      </where>
-    </select>
-
-  <select id="selectTranById" resultMap="TranResultMap">
-    SELECT
-      tt.*,
-      tcl.id customerId,
-      tcl.full_name customerName,
-      tdv.id stageId,
-      tdv.type_value stageName,
-      tdv.`order` stageOrder
-    FROM
-      `t_tran` tt
-        JOIN t_customer tc ON tt.customer_id = tc.id
-        JOIN t_clue tcl ON tc.clue_id=tcl.id
-        JOIN t_dic_value tdv ON tt.stage=tdv.id
-
-    where tt.id=#{id}
+  <select id="selectDetailById" resultMap="DetailResultMap">
+    select tt.*, u.id createByUserId, u.name createByUserName
+    from t_tran tt left join t_user u on tt.create_by = u.id
+    where tt.id = #{id}
   </select>
+
+  <select id="selectPage" resultMap="DetailResultMap">
+    select tt.*, u.id createByUserId, u.name createByUserName
+    from t_tran tt left join t_user u on tt.create_by = u.id
+    order by tt.deal_time is null, tt.deal_time desc, tt.id desc
+  </select>
+
+  <select id="selectPageForExport" resultMap="DetailResultMap">
+    select tt.*, u.id createByUserId, u.name createByUserName
+    from t_tran tt left join t_user u on tt.create_by = u.id
+    <where>
+      <if test="idList != null and idList.size() > 0">
+        and tt.id in
+        <foreach collection="idList" item="id" open="(" separator="," close=")">#{id}</foreach>
+      </if>
+    </where>
+    order by tt.deal_time desc, tt.id desc
+  </select>
+
   <select id="selectSuccessTranAmount" resultType="java.math.BigDecimal">
-    SELECT sum(money) FROM t_tran WHERE stage=42
+    select ifnull(sum(money), 0) from t_tran
   </select>
   <select id="selectTotalTranAmount" resultType="java.math.BigDecimal">
-    SELECT sum(money) FROM t_tran
+    select ifnull(sum(money), 0) from t_tran
   </select>
   <select id="selectTotalTranCount" resultType="java.lang.Integer">
-    SELECT count(money) FROM t_tran
+    select count(1) from t_tran
   </select>
   <select id="selectSuccessTotalCount" resultType="java.lang.Integer">
-    SELECT count(money) FROM t_tran WHERE stage=42
+    select count(1) from t_tran
   </select>
 
-  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
-    delete from t_tran
-    where id = #{id,jdbcType=INTEGER}
+  <delete id="deleteByPrimaryKey">
+    delete from t_tran where id = #{id}
   </delete>
-  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.bjpowernode.entity.TTran" useGeneratedKeys="true">
-    insert into t_tran (tran_no, customer_id, money, 
-      expected_date, stage, description, 
-      next_contact_time, create_time, create_by, 
-      edit_time, edit_by)
-    values (#{tranNo,jdbcType=VARCHAR}, #{customerId,jdbcType=INTEGER}, #{money,jdbcType=DECIMAL}, 
-      #{expectedDate,jdbcType=TIMESTAMP}, #{stage,jdbcType=INTEGER}, #{description,jdbcType=VARCHAR}, 
-      #{nextContactTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=INTEGER}, 
-      #{editTime,jdbcType=TIMESTAMP}, #{editBy,jdbcType=INTEGER})
-  </insert>
-  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.bjpowernode.entity.TTran" useGeneratedKeys="true">
+
+  <delete id="deleteByCustomerId">
+    delete from t_tran where customer_id = #{customerId}
+  </delete>
+
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" useGeneratedKeys="true">
     insert into t_tran
     <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="tranNo != null">
-        tran_no,
-      </if>
-      <if test="customerId != null">
-        customer_id,
-      </if>
-      <if test="money != null">
-        money,
-      </if>
-      <if test="expectedDate != null">
-        expected_date,
-      </if>
-      <if test="stage != null">
-        stage,
-      </if>
-      <if test="description != null">
-        description,
-      </if>
-      <if test="nextContactTime != null">
-        next_contact_time,
-      </if>
-      <if test="createTime != null">
-        create_time,
-      </if>
-      <if test="createBy != null">
-        create_by,
-      </if>
-      <if test="editTime != null">
-        edit_time,
-      </if>
-      <if test="editBy != null">
-        edit_by,
-      </if>
+      <if test="tranNo != null">tran_no,</if>
+      <if test="customerId != null">customer_id,</if>
+      <if test="studentName != null">student_name,</if>
+      <if test="money != null">money,</if>
+      <if test="createBy != null">create_by,</if>
+      <if test="dealTime != null">deal_time,</if>
+      <if test="courseType != null">course_type,</if>
+      <if test="tranRemark != null">tran_remark,</if>
+      <if test="createTime != null">create_time,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="tranNo != null">
-        #{tranNo,jdbcType=VARCHAR},
-      </if>
-      <if test="customerId != null">
-        #{customerId,jdbcType=INTEGER},
-      </if>
-      <if test="money != null">
-        #{money,jdbcType=DECIMAL},
-      </if>
-      <if test="expectedDate != null">
-        #{expectedDate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="stage != null">
-        #{stage,jdbcType=INTEGER},
-      </if>
-      <if test="description != null">
-        #{description,jdbcType=VARCHAR},
-      </if>
-      <if test="nextContactTime != null">
-        #{nextContactTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="createTime != null">
-        #{createTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="createBy != null">
-        #{createBy,jdbcType=INTEGER},
-      </if>
-      <if test="editTime != null">
-        #{editTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="editBy != null">
-        #{editBy,jdbcType=INTEGER},
-      </if>
+      <if test="tranNo != null">#{tranNo},</if>
+      <if test="customerId != null">#{customerId},</if>
+      <if test="studentName != null">#{studentName},</if>
+      <if test="money != null">#{money},</if>
+      <if test="createBy != null">#{createBy},</if>
+      <if test="dealTime != null">#{dealTime},</if>
+      <if test="courseType != null">#{courseType},</if>
+      <if test="tranRemark != null">#{tranRemark},</if>
+      <if test="createTime != null">#{createTime},</if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.bjpowernode.entity.TTran">
+
+  <update id="updateByPrimaryKeySelective">
     update t_tran
     <set>
-      <if test="tranNo != null">
-        tran_no = #{tranNo,jdbcType=VARCHAR},
-      </if>
-      <if test="customerId != null">
-        customer_id = #{customerId,jdbcType=INTEGER},
-      </if>
-      <if test="money != null">
-        money = #{money,jdbcType=DECIMAL},
-      </if>
-      <if test="expectedDate != null">
-        expected_date = #{expectedDate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="stage != null">
-        stage = #{stage,jdbcType=INTEGER},
-      </if>
-      <if test="description != null">
-        description = #{description,jdbcType=VARCHAR},
-      </if>
-      <if test="nextContactTime != null">
-        next_contact_time = #{nextContactTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="createTime != null">
-        create_time = #{createTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="createBy != null">
-        create_by = #{createBy,jdbcType=INTEGER},
-      </if>
-      <if test="editTime != null">
-        edit_time = #{editTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="editBy != null">
-        edit_by = #{editBy,jdbcType=INTEGER},
-      </if>
+      <if test="studentName != null">student_name = #{studentName},</if>
+      <if test="money != null">money = #{money},</if>
+      <if test="dealTime != null">deal_time = #{dealTime},</if>
+      <if test="courseType != null">course_type = #{courseType},</if>
+      <if test="tranRemark != null">tran_remark = #{tranRemark},</if>
     </set>
-    where id = #{id,jdbcType=INTEGER}
-  </update>
-  <update id="updateByPrimaryKey" parameterType="com.bjpowernode.entity.TTran">
-    update t_tran
-    set tran_no = #{tranNo,jdbcType=VARCHAR},
-      customer_id = #{customerId,jdbcType=INTEGER},
-      money = #{money,jdbcType=DECIMAL},
-      expected_date = #{expectedDate,jdbcType=TIMESTAMP},
-      stage = #{stage,jdbcType=INTEGER},
-      description = #{description,jdbcType=VARCHAR},
-      next_contact_time = #{nextContactTime,jdbcType=TIMESTAMP},
-      create_time = #{createTime,jdbcType=TIMESTAMP},
-      create_by = #{createBy,jdbcType=INTEGER},
-      edit_time = #{editTime,jdbcType=TIMESTAMP},
-      edit_by = #{editBy,jdbcType=INTEGER}
-    where id = #{id,jdbcType=INTEGER}
+    where id = #{id}
   </update>
 </mapper>

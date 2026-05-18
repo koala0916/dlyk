@@ -60,4 +60,9 @@
       permission_id = #{permissionId,jdbcType=INTEGER}
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <delete id="deleteByRoleId" parameterType="java.lang.Integer">
+    delete from t_role_permission
+    where role_id = #{roleId,jdbcType=INTEGER}
+  </delete>
 </mapper>

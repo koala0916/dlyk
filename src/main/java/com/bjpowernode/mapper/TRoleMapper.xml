@@ -12,6 +12,13 @@
     id, `role`, role_name
   </sql>
 
+  <select id="selectAll" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from t_role
+    order by id asc
+  </select>
+
   <select id="selectByUserId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     SELECT
       tr.*

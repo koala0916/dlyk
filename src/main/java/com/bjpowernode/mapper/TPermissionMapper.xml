@@ -77,6 +77,23 @@
           LEFT JOIN t_user tu ON tu.id = tur.user_id
 
       WHERE tu.id=#{id} AND tp.type='menu' AND childTp.type='menu'
+      ORDER BY tp.order_no ASC, tp.id ASC, childTp.order_no ASC, childTp.id ASC
+    </select>
+
+    <!-- RBAC：用户 -> 角色 -> 角色权限，仅返回该用户有权限的 menu 记录 -->
+    <select id="selectMenuPermissionsByUserId" resultMap="BaseResultMap">
+      SELECT DISTINCT
+        tp.id, tp.`name`, tp.code, tp.url, tp.`type`, tp.parent_id, tp.order_no, tp.icon, tp.component
+      FROM
+        t_permission tp
+          INNER JOIN t_role_permission trp ON tp.id = trp.permission_id
+          INNER JOIN t_role tr ON trp.role_id = tr.id
+          INNER JOIN t_user_role tur ON tr.id = tur.role_id
+          INNER JOIN t_user tu ON tur.user_id = tu.id
+      WHERE
+        tu.id = #{userId,jdbcType=INTEGER}
+        AND tp.type = 'menu'
+      ORDER BY tp.order_no ASC, tp.id ASC
     </select>
 
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">

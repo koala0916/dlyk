@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bjpowernode.mapper.TClueEditLogMapper">
+
+  <resultMap id="BaseResultMap" type="com.bjpowernode.entity.TClueEditLog">
+    <id column="id" property="id" />
+    <result column="clue_id" property="clueId" />
+    <result column="edit_by" property="editBy" />
+    <result column="edit_time" property="editTime" />
+    <result column="change_content" property="changeContent" />
+    <association property="editByDO" javaType="com.bjpowernode.entity.TUser">
+      <id column="editByUserId" property="id" />
+      <result column="editByUserName" property="name" />
+    </association>
+  </resultMap>
+
+  <insert id="insert" keyColumn="id" keyProperty="id" useGeneratedKeys="true">
+    insert into t_clue_edit_log (clue_id, edit_by, edit_time, change_content)
+    values (#{clueId}, #{editBy}, #{editTime}, #{changeContent})
+  </insert>
+
+  <delete id="deleteByClueId">
+    delete from t_clue_edit_log where clue_id = #{clueId}
+  </delete>
+
+  <select id="selectByClueId" resultMap="BaseResultMap">
+    select l.*, u.id editByUserId, u.name editByUserName
+    from t_clue_edit_log l left join t_user u on l.edit_by = u.id
+    where l.clue_id = #{clueId}
+    order by l.edit_time desc, l.id desc
+  </select>
+</mapper>
