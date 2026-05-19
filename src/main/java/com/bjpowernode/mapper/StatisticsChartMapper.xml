@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bjpowernode.mapper.StatisticsChartMapper">
+
+  <!-- 子查询聚合，兼容 MySQL ONLY_FULL_GROUP_BY -->
+  <select id="selectMonthlyTranByUser" resultType="com.bjpowernode.vo.NameValueData">
+    select concat(t.month_key, '|', t.user_name) as name, t.amount as value
+    from (
+      select DATE_FORMAT(tt.deal_time, '%Y-%m') as month_key,
+             ifnull(max(u.name), '未知') as user_name,
+             ifnull(sum(tt.money), 0) as amount
+      from t_tran tt
+        left join t_user u on tt.create_by = u.id
+      where tt.deal_time is not null
+        and tt.deal_time &gt;= #{startTime}
+      group by DATE_FORMAT(tt.deal_time, '%Y-%m'), tt.create_by
+    ) t
+    order by name
+  </select>
+
+  <select id="selectMonthlyTranTotal" resultType="com.bjpowernode.vo.NameValueData">
+    select t.month_key as name, t.amount as value
+    from (
+      select DATE_FORMAT(tt.deal_time, '%Y-%m') as month_key,
+             ifnull(sum(tt.money), 0) as amount
+      from t_tran tt
+      where tt.deal_time is not null and tt.deal_time &gt;= #{startTime}
+      group by DATE_FORMAT(tt.deal_time, '%Y-%m')
+    ) t
+    order by name
+  </select>
+
+  <select id="selectPerformancePieByMonth" resultType="com.bjpowernode.vo.NameValueData">
+    select ifnull(u.name, '未知') as name, ifnull(sum(tt.money), 0) as value
+    from t_tran tt left join t_user u on tt.create_by = u.id
+    where year(tt.deal_time) = #{year} and month(tt.deal_time) = #{month}
+    group by tt.create_by, u.name
+    having value &gt; 0
+    order by value desc
+  </select>
+
+  <select id="selectPerformancePieByYear" resultType="com.bjpowernode.vo.NameValueData">
+    select ifnull(u.name, '未知') as name, ifnull(sum(tt.money), 0) as value
+    from t_tran tt left join t_user u on tt.create_by = u.id
+    where year(tt.deal_time) = #{year}
+    group by tt.create_by, u.name
+    having value &gt; 0
+    order by value desc
+  </select>
+
+  <sql id="clueTimeUserFilter">
+    <if test="startTime != null">and tc.create_time &gt;= #{startTime}</if>
+    <if test="endTime != null">and tc.create_time &lt;= #{endTime}</if>
+    <if test="userId != null and userId &gt; 0">and tc.create_by = #{userId}</if>
+  </sql>
+
+  <select id="countClues" resultType="java.lang.Integer">
+    select count(1) from t_clue tc where 1=1 <include refid="clueTimeUserFilter"/>
+  </select>
+
+  <select id="countCluesContactedOrConverted" resultType="java.lang.Integer">
+    select count(1) from t_clue tc
+    where tc.clue_status in ('已联系', '已转客户') <include refid="clueTimeUserFilter"/>
+  </select>
+
+  <select id="countCluesConverted" resultType="java.lang.Integer">
+    select count(1) from t_clue tc
+    where tc.clue_status = '已转客户' <include refid="clueTimeUserFilter"/>
+  </select>
+
+  <select id="countRenewalTrans" resultType="java.lang.Integer">
+    select count(1) from t_tran tt
+    where exists (
+      select 1 from t_tran t2
+      where t2.customer_id = tt.customer_id and t2.deal_time &lt; tt.deal_time
+    )
+    <if test="startTime != null">and tt.deal_time &gt;= #{startTime}</if>
+    <if test="endTime != null">and tt.deal_time &lt;= #{endTime}</if>
+    <if test="userId != null and userId &gt; 0">and tt.create_by = #{userId}</if>
+  </select>
+
+  <select id="selectCustomersForAnalysis" resultType="com.bjpowernode.entity.TCustomer">
+    select * from t_customer
+    <where>
+      <if test="sources != null and sources.size() &gt; 0">
+        and source in
+        <foreach collection="sources" item="s" open="(" separator="," close=")">#{s}</foreach>
+      </if>
+      <if test="courseTypes != null and courseTypes.size() &gt; 0">
+        and course_type in
+        <foreach collection="courseTypes" item="c" open="(" separator="," close=")">#{c}</foreach>
+      </if>
+      <if test="studyingList != null and studyingList.size() &gt; 0">
+        and studying in
+        <foreach collection="studyingList" item="st" open="(" separator="," close=")">#{st}</foreach>
+      </if>
+      <if test="createByList != null and createByList.size() &gt; 0">
+        and create_by in
+        <foreach collection="createByList" item="cb" open="(" separator="," close=")">#{cb}</foreach>
+      </if>
+      <if test="ageRanges != null and ageRanges.size() &gt; 0">
+        and (
+        <foreach collection="ageRanges" item="ar" separator=" or ">
+          (age &gt;= cast(substring_index(#{ar}, '-', 1) as signed)
+           and age &lt; cast(substring_index(#{ar}, '-', -1) as signed))
+        </foreach>
+        )
+      </if>
+    </where>
+  </select>
+
+  <select id="selectCluesForAnalysis" resultType="com.bjpowernode.entity.TClue">
+    select * from t_clue
+    <where>
+      <if test="sources != null and sources.size() &gt; 0">
+        and source in <foreach collection="sources" item="s" open="(" separator="," close=")">#{s}</foreach>
+      </if>
+      <if test="courses != null and courses.size() &gt; 0">
+        and intention_course in <foreach collection="courses" item="c" open="(" separator="," close=")">#{c}</foreach>
+      </if>
+      <if test="statusList != null and statusList.size() &gt; 0">
+        and clue_status in <foreach collection="statusList" item="st" open="(" separator="," close=")">#{st}</foreach>
+      </if>
+      <if test="strengthList != null and strengthList.size() &gt; 0">
+        and intention_strength in <foreach collection="strengthList" item="is" open="(" separator="," close=")">#{is}</foreach>
+      </if>
+      <if test="createByList != null and createByList.size() &gt; 0">
+        and create_by in <foreach collection="createByList" item="cb" open="(" separator="," close=")">#{cb}</foreach>
+      </if>
+      <if test="ageRanges != null and ageRanges.size() &gt; 0">
+        and (
+        <foreach collection="ageRanges" item="ar" separator=" or ">
+          (age &gt;= cast(substring_index(#{ar}, '-', 1) as signed)
+           and age &lt; cast(substring_index(#{ar}, '-', -1) as signed))
+        </foreach>
+        )
+      </if>
+    </where>
+  </select>
+
+  <select id="selectDistinctCustomerSource" resultType="java.lang.String">
+    select distinct source from t_customer where source is not null and source != '' order by source
+  </select>
+
+  <select id="selectDistinctCustomerCourseType" resultType="java.lang.String">
+    select distinct course_type from t_customer where course_type is not null and course_type != '' order by course_type
+  </select>
+
+  <select id="selectDistinctClueSource" resultType="java.lang.String">
+    select distinct source from t_clue where source is not null and source != '' order by source
+  </select>
+
+  <select id="selectDistinctClueCourse" resultType="java.lang.String">
+    select distinct intention_course from t_clue where intention_course is not null and intention_course != '' order by intention_course
+  </select>
+
+</mapper>

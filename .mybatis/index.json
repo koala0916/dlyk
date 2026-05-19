@@ -1,13 +1,8 @@
 {
   "version": "1.0",
-  "timestamp": 1779092887698,
+  "timestamp": 1779124310073,
   "projectRoot": "e:\\BaiduNetdiskDownload\\18-dlyk\\dlyk-code5-30\\dlyk-server",
   "entries": [
-    {
-      "path": "target\\classes\\com\\bjpowernode\\config\\SecurityConfig.class",
-      "mtime": 1778566916793.5571,
-      "size": 11151
-    },
     {
       "path": "target\\classes\\com\\bjpowernode\\DlykServerApplication.class",
       "mtime": 1779092885570.8894,
@@ -18,6 +13,11 @@
         ],
         "sourceFile": "e:\\BaiduNetdiskDownload\\18-dlyk\\dlyk-code5-30\\dlyk-server\\target\\classes\\com\\bjpowernode\\DlykServerApplication.class"
       }
+    },
+    {
+      "path": "target\\classes\\com\\bjpowernode\\config\\SecurityConfig.class",
+      "mtime": 1779124306594.3376,
+      "size": 11151
     }
   ]
 }

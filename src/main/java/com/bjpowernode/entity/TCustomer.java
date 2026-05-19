@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 客户表（武术学员）
@@ -34,6 +35,8 @@ public class TCustomer implements Serializable {
   private String source;
   /** 是否正在学习 0否 1是 */
   private Integer studying;
-  /** 预留：线索ID */
+  /** 来源线索ID */
   private Integer clueId;
+  /** 详情：关联交易列表（非表字段） */
+  private List<TTran> tranList;
 }

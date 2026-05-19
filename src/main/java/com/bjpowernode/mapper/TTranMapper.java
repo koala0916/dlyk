@@ -16,7 +16,8 @@ public interface TTranMapper {
 
   int updateByPrimaryKeySelective(TTran record);
 
-  List<TTran> selectPage(BaseQuery baseQuery);
+  List<TTran> selectPage(@org.apache.ibatis.annotations.Param("baseQuery") BaseQuery baseQuery,
+      @org.apache.ibatis.annotations.Param("search") com.bjpowernode.query.TranSearchQuery search);
 
   List<TTran> selectPageForExport(BaseQuery baseQuery, List<String> idList);
 

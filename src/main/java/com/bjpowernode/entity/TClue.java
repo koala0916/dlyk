@@ -34,4 +34,6 @@ public class TClue implements Serializable {
   private String clueStatus;
   private Integer createBy;
   private Date createTime;
+  /** 转客户后关联的客户ID（列表展示用） */
+  private Integer customerId;
 }

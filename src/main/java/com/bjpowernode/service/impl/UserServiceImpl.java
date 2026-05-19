@@ -78,13 +78,13 @@ public class UserServiceImpl implements UserService {
      * @return
      */
     @Override
-    public PageInfo<TUser> getUserByPage(Integer current) {
+    public PageInfo<TUser> getUserByPage(Integer current, com.bjpowernode.query.UserSearchQuery search) {
         //1.设置查询第几页，每页查多少条数据
         PageHelper.startPage(current, Constant.PAGE_SIZE);
 
         //2.调用mapper查询用户列表
         //分页插件pageHelper会在sql语句发出之前拼接分页的sql语句  limit
-        List<TUser> tUserList = tUserMapper.selectByPage(new BaseQuery());
+        List<TUser> tUserList = tUserMapper.selectByPage(new BaseQuery(), search);
         //3.创建PageInfo对象，封装查询结果
         PageInfo<TUser> pageInfo = new PageInfo<>(tUserList);
         return pageInfo;

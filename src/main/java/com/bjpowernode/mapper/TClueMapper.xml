@@ -15,6 +15,7 @@
     <result column="clue_status" property="clueStatus" />
     <result column="create_by" property="createBy" />
     <result column="create_time" property="createTime" />
+    <result column="linked_customer_id" property="customerId" />
   </resultMap>
 
   <resultMap id="DetailResultMap" type="com.bjpowernode.entity.TClue" extends="BaseResultMap">
@@ -40,10 +41,39 @@
   </select>
 
   <select id="selectByPage" resultMap="DetailResultMap">
-    select tc.*, u.id createByUserId, u.name createByUserName
-    from t_clue tc left join t_user u on tc.create_by = u.id
+    select tc.*, u.id createByUserId, u.name createByUserName, tcust.id linked_customer_id
+    from t_clue tc
+      left join t_user u on tc.create_by = u.id
+      left join t_customer tcust on tcust.clue_id = tc.id
     <where>
-      ${filterSQL}
+      <if test="search != null">
+        <if test="search.name != null and search.name != ''">and tc.name like concat('%',#{search.name},'%')</if>
+        <if test="search.phone != null and search.phone != ''">and tc.phone like concat('%',#{search.phone},'%')</if>
+        <if test="search.intentionCourse != null and search.intentionCourse != ''">and tc.intention_course like concat('%',#{search.intentionCourse},'%')</if>
+        <if test="search.source != null and search.source != ''">and tc.source like concat('%',#{search.source},'%')</if>
+        <if test="search.remark != null and search.remark != ''">and tc.remark like concat('%',#{search.remark},'%')</if>
+        <if test="search.clueStatus != null and search.clueStatus != ''">and tc.clue_status = #{search.clueStatus}</if>
+        <if test="search.createBy != null">and tc.create_by = #{search.createBy}</if>
+        <if test="search.createTimeStart != null">and tc.create_time &gt;= #{search.createTimeStart}</if>
+        <if test="search.createTimeEnd != null">and tc.create_time &lt;= #{search.createTimeEnd}</if>
+        <if test="search.createTimePoint != null and search.createTimePointType == 'before'">and tc.create_time &lt;= #{search.createTimePoint}</if>
+        <if test="search.createTimePoint != null and search.createTimePointType == 'after'">and tc.create_time &gt;= #{search.createTimePoint}</if>
+        <if test="search.trialClassTimeStart != null">and tc.trial_class_time &gt;= #{search.trialClassTimeStart}</if>
+        <if test="search.trialClassTimeEnd != null">and tc.trial_class_time &lt;= #{search.trialClassTimeEnd}</if>
+        <if test="search.trialClassTimePoint != null and search.trialClassTimePointType == 'before'">and tc.trial_class_time &lt;= #{search.trialClassTimePoint}</if>
+        <if test="search.trialClassTimePoint != null and search.trialClassTimePointType == 'after'">and tc.trial_class_time &gt;= #{search.trialClassTimePoint}</if>
+        <if test="search.ageOp == 'eq' and search.ageValue != null">and tc.age = #{search.ageValue}</if>
+        <if test="search.ageOp == 'gt' and search.ageValue != null">and tc.age &gt; #{search.ageValue}</if>
+        <if test="search.ageOp == 'lt' and search.ageValue != null">and tc.age &lt; #{search.ageValue}</if>
+        <if test="search.ageOp == 'between' and search.ageMin != null and search.ageMax != null">and tc.age between #{search.ageMin} and #{search.ageMax}</if>
+        <if test="search.intentionStrengthOp == 'eq' and search.intentionStrengthValue != null">and tc.intention_strength = #{search.intentionStrengthValue}</if>
+        <if test="search.intentionStrengthOp == 'gt' and search.intentionStrengthValue != null">and tc.intention_strength &gt; #{search.intentionStrengthValue}</if>
+        <if test="search.intentionStrengthOp == 'lt' and search.intentionStrengthValue != null">and tc.intention_strength &lt; #{search.intentionStrengthValue}</if>
+        <if test="search.intentionStrengthOp == 'between' and search.intentionStrengthMin != null and search.intentionStrengthMax != null">and tc.intention_strength between #{search.intentionStrengthMin} and #{search.intentionStrengthMax}</if>
+      </if>
+      <if test="baseQuery != null and baseQuery.filterSQL != null and baseQuery.filterSQL != ''">
+        ${baseQuery.filterSQL}
+      </if>
     </where>
     order by (tc.clue_status = '已转客户') asc,
              tc.intention_strength is null, tc.intention_strength desc,
@@ -59,7 +89,9 @@
         and tc.id in
         <foreach collection="idList" item="id" open="(" separator="," close=")">#{id}</foreach>
       </if>
-      ${filterSQL}
+      <if test="baseQuery != null and baseQuery.filterSQL != null and baseQuery.filterSQL != ''">
+        ${baseQuery.filterSQL}
+      </if>
     </where>
     order by (tc.clue_status = '已转客户') asc, tc.intention_strength desc, tc.id desc
   </select>

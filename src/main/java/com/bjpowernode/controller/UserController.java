@@ -47,8 +47,8 @@ public class UserController {
      * @param current 当前页码
      */
     @GetMapping("api/users")
-    public Result users(Integer current) {
-        PageInfo<TUser> pageInfo = userService.getUserByPage(current);
+    public Result users(Integer current, com.bjpowernode.query.UserSearchQuery search) {
+        PageInfo<TUser> pageInfo = userService.getUserByPage(current, search);
 
         return Result.OK(pageInfo);
     }

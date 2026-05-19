@@ -18,10 +18,12 @@ public interface TClueMapper {
   int updateByPrimaryKeySelective(TClue record);
 
   @DataScope(tableAlias = "tc", columnName = "create_by")
-  List<TClue> selectByPage(BaseQuery baseQuery);
+  List<TClue> selectByPage(@org.apache.ibatis.annotations.Param("baseQuery") BaseQuery baseQuery,
+      @org.apache.ibatis.annotations.Param("search") com.bjpowernode.query.ClueSearchQuery search);
 
   @DataScope(tableAlias = "tc", columnName = "create_by")
-  List<TClue> selectByPageForExport(BaseQuery baseQuery, List<String> idList);
+  List<TClue> selectByPageForExport(@org.apache.ibatis.annotations.Param("baseQuery") BaseQuery baseQuery,
+      @org.apache.ibatis.annotations.Param("idList") List<String> idList);
 
   TClue selectDetailById(Integer id);
 

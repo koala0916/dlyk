@@ -51,8 +51,8 @@ public class CustomerController {
   }
 
   @GetMapping("/api/customers")
-  public Result getCustomers(Integer current) {
-    PageInfo<TCustomer> pageInfo = customerService.getCustomersByPage(current);
+  public Result getCustomers(Integer current, com.bjpowernode.query.CustomerSearchQuery search) {
+    PageInfo<TCustomer> pageInfo = customerService.getCustomersByPage(current, search);
     return Result.OK(pageInfo);
   }
 

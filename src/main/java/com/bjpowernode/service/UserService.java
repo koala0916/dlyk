@@ -10,7 +10,7 @@ import java.util.List;
 //我们的处理登录的service接口，需要继承spring security框架的UserDetailsService接口
 public interface UserService extends UserDetailsService {
 
-    PageInfo<TUser> getUserByPage(Integer current);
+    PageInfo<TUser> getUserByPage(Integer current, com.bjpowernode.query.UserSearchQuery search);
 
     TUser getUserById(Integer id);
 

@@ -58,11 +58,41 @@
           #{id}
         </foreach>
       </if>
+      <if test="search != null">
+        <if test="search.name != null and search.name != ''">and tc.name like concat('%',#{search.name},'%')</if>
+        <if test="search.phone != null and search.phone != ''">and tc.phone like concat('%',#{search.phone},'%')</if>
+        <if test="search.courseType != null and search.courseType != ''">and tc.course_type like concat('%',#{search.courseType},'%')</if>
+        <if test="search.source != null and search.source != ''">and tc.source like concat('%',#{search.source},'%')</if>
+        <if test="search.remark != null and search.remark != ''">and tc.remark like concat('%',#{search.remark},'%')</if>
+        <if test="search.studying != null">and tc.studying = #{search.studying}</if>
+        <if test="search.createBy != null">and tc.create_by = #{search.createBy}</if>
+        <if test="search.createTimeStart != null">and tc.create_time &gt;= #{search.createTimeStart}</if>
+        <if test="search.createTimeEnd != null">and tc.create_time &lt;= #{search.createTimeEnd}</if>
+        <if test="search.createTimePoint != null and search.createTimePointType == 'before'">and tc.create_time &lt;= #{search.createTimePoint}</if>
+        <if test="search.createTimePoint != null and search.createTimePointType == 'after'">and tc.create_time &gt;= #{search.createTimePoint}</if>
+        <if test="search.courseExpireTimeStart != null">and tc.course_expire_time &gt;= #{search.courseExpireTimeStart}</if>
+        <if test="search.courseExpireTimeEnd != null">and tc.course_expire_time &lt;= #{search.courseExpireTimeEnd}</if>
+        <if test="search.courseExpireTimePoint != null and search.courseExpireTimePointType == 'before'">and tc.course_expire_time &lt;= #{search.courseExpireTimePoint}</if>
+        <if test="search.courseExpireTimePoint != null and search.courseExpireTimePointType == 'after'">and tc.course_expire_time &gt;= #{search.courseExpireTimePoint}</if>
+        <if test="search.ageOp == 'eq' and search.ageValue != null">and tc.age = #{search.ageValue}</if>
+        <if test="search.ageOp == 'gt' and search.ageValue != null">and tc.age &gt; #{search.ageValue}</if>
+        <if test="search.ageOp == 'lt' and search.ageValue != null">and tc.age &lt; #{search.ageValue}</if>
+        <if test="search.ageOp == 'between' and search.ageMin != null and search.ageMax != null">and tc.age between #{search.ageMin} and #{search.ageMax}</if>
+        <if test="search.remainingLessonsOp == 'eq' and search.remainingLessonsValue != null">and tc.remaining_lessons = #{search.remainingLessonsValue}</if>
+        <if test="search.remainingLessonsOp == 'gt' and search.remainingLessonsValue != null">and tc.remaining_lessons &gt; #{search.remainingLessonsValue}</if>
+        <if test="search.remainingLessonsOp == 'lt' and search.remainingLessonsValue != null">and tc.remaining_lessons &lt; #{search.remainingLessonsValue}</if>
+        <if test="search.remainingLessonsOp == 'between' and search.remainingLessonsMin != null and search.remainingLessonsMax != null">and tc.remaining_lessons between #{search.remainingLessonsMin} and #{search.remainingLessonsMax}</if>
+      </if>
     </where>
     order by tc.studying desc,
              tc.remaining_lessons is null, tc.remaining_lessons asc,
              tc.course_expire_time is null, tc.course_expire_time asc,
              tc.id asc
+  </select>
+
+  <select id="selectTransByCustomerId" resultType="com.bjpowernode.entity.TTran">
+    select id, tran_no tranNo, student_name studentName, money, deal_time dealTime, course_type courseType
+    from t_tran where customer_id = #{customerId} order by deal_time desc
   </select>
 
   <select id="selectTotalCustomerCount" resultType="java.lang.Integer">

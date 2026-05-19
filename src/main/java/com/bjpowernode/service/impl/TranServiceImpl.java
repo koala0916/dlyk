@@ -29,9 +29,9 @@ public class TranServiceImpl implements TranService {
   private TTranMapper tTranMapper;
 
   @Override
-  public PageInfo<TTran> getTrans(Integer current) {
+  public PageInfo<TTran> getTrans(Integer current, com.bjpowernode.query.TranSearchQuery search) {
     PageHelper.startPage(current, Constant.PAGE_SIZE);
-    return new PageInfo<>(tTranMapper.selectPage(new BaseQuery()));
+    return new PageInfo<>(tTranMapper.selectPage(new BaseQuery(), search));
   }
 
   @Override

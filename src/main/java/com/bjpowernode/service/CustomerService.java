@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface CustomerService {
 
-  PageInfo<TCustomer> getCustomersByPage(Integer current);
+  PageInfo<TCustomer> getCustomersByPage(Integer current, com.bjpowernode.query.CustomerSearchQuery search);
 
   void exportExcel(List<String> idList, OutputStream outputStream);
 

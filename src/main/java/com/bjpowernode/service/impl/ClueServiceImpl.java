@@ -47,9 +47,9 @@ public class ClueServiceImpl implements ClueService {
   private TTranMapper tTranMapper;
 
   @Override
-  public PageInfo<TClue> getClueByPage(Integer current) {
+  public PageInfo<TClue> getClueByPage(Integer current, com.bjpowernode.query.ClueSearchQuery search) {
     PageHelper.startPage(current, Constant.PAGE_SIZE);
-    return new PageInfo<>(tClueMapper.selectByPage(new BaseQuery()));
+    return new PageInfo<>(tClueMapper.selectByPage(new BaseQuery(), search));
   }
 
   @Override

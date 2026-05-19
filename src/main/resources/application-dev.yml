@@ -7,6 +7,11 @@ spring:
   application:
     name: dlyk-server
 
+  # 关闭 DevTools 热重启，避免 IDE 重复启动时 8088 端口冲突
+  devtools:
+    restart:
+      enabled: false
+
   #jackson进行json转换时使用指定的时区和格式进行转换
   jackson:
     time-zone: GMT+8

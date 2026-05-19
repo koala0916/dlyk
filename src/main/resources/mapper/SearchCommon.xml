@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  公共搜索 SQL 片段（被各 Mapper 通过 namespace 引用）
+-->
+<mapper namespace="searchCommon">
+
+  <sql id="likeIf">
+    <!-- 调用方需传入 column 与 value 属性名，此处用独立片段复制更简单，本文件作文档参考 -->
+  </sql>
+
+  <!-- 整数范围：op=eq|gt|lt|between，参数前缀如 age -->
+  <sql id="intRange">
+    <if test="${prefix}Op != null and ${prefix}Op == 'eq' and ${prefix}Value != null">
+      and ${column} = #{${prefix}Value}
+    </if>
+    <if test="${prefix}Op != null and ${prefix}Op == 'gt' and ${prefix}Value != null">
+      and ${column} &gt; #{${prefix}Value}
+    </if>
+    <if test="${prefix}Op != null and ${prefix}Op == 'lt' and ${prefix}Value != null">
+      and ${column} &lt; #{${prefix}Value}
+    </if>
+    <if test="${prefix}Op != null and ${prefix}Op == 'between' and ${prefix}Min != null and ${prefix}Max != null">
+      and ${column} &gt;= #{${prefix}Min} and ${column} &lt;= #{${prefix}Max}
+    </if>
+  </sql>
+</mapper>

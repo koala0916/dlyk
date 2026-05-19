@@ -25,7 +25,8 @@ public interface TUserMapper {
 
     //别名tableAlias要与sql中的一致
     @DataScope(tableAlias = "tu",columnName = "id")
-    List<TUser> selectByPage(BaseQuery basequery);
+    List<TUser> selectByPage(@org.apache.ibatis.annotations.Param("baseQuery") BaseQuery baseQuery,
+        @org.apache.ibatis.annotations.Param("search") com.bjpowernode.query.UserSearchQuery search);
 
     TUser selectById(Integer id);
 

@@ -43,15 +43,15 @@ public class CustomerServiceImpl implements CustomerService {
   private TTranMapper tTranMapper;
 
   @Override
-  public PageInfo<TCustomer> getCustomersByPage(Integer current) {
+  public PageInfo<TCustomer> getCustomersByPage(Integer current, com.bjpowernode.query.CustomerSearchQuery search) {
     PageHelper.startPage(current, Constant.PAGE_SIZE);
-    List<TCustomer> list = tCustomerMapper.selectByPage(new BaseQuery(), null);
+    List<TCustomer> list = tCustomerMapper.selectByPage(new BaseQuery(), search, null);
     return new PageInfo<>(list);
   }
 
   @Override
   public void exportExcel(List<String> idList, OutputStream outputStream) {
-    List<TCustomer> list = tCustomerMapper.selectByPage(new BaseQuery(), idList);
+    List<TCustomer> list = tCustomerMapper.selectByPage(new BaseQuery(), null, idList);
     List<CustomerExcel> rows = new ArrayList<>();
     for (TCustomer c : list) {
       CustomerExcel row = new CustomerExcel();
@@ -73,7 +73,11 @@ public class CustomerServiceImpl implements CustomerService {
 
   @Override
   public TCustomer queryCustomerByCustomerId(Integer customerId) {
-    return tCustomerMapper.selectDetailById(customerId);
+    TCustomer customer = tCustomerMapper.selectDetailById(customerId);
+    if (customer != null) {
+      customer.setTranList(tCustomerMapper.selectTransByCustomerId(customerId));
+    }
+    return customer;
   }
 
   @Override

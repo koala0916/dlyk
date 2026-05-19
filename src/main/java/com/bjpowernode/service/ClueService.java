@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface ClueService {
 
-  PageInfo<TClue> getClueByPage(Integer current);
+  PageInfo<TClue> getClueByPage(Integer current, com.bjpowernode.query.ClueSearchQuery search);
 
   TClue getClueById(Integer id);
 

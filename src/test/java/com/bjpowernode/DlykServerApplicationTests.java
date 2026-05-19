@@ -85,7 +85,7 @@ class DlykServerApplicationTests {
 
     @Test
     public void testPageHelpler(){
-        PageInfo<TUser> userByPage = userService.getUserByPage(1);
+        PageInfo<TUser> userByPage = userService.getUserByPage(1, null);
         System.out.println(userByPage);
     }
 

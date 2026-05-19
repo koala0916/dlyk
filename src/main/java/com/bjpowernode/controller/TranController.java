@@ -22,8 +22,8 @@ public class TranController {
   private TranService tranService;
 
   @GetMapping("/api/trans")
-  public Result trans(Integer current) {
-    PageInfo<TTran> pageInfo = tranService.getTrans(current);
+  public Result trans(Integer current, com.bjpowernode.query.TranSearchQuery search) {
+    PageInfo<TTran> pageInfo = tranService.getTrans(current, search);
     return Result.OK(pageInfo);
   }
 

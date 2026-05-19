@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface TranService {
 
-  PageInfo<TTran> getTrans(Integer current);
+  PageInfo<TTran> getTrans(Integer current, com.bjpowernode.query.TranSearchQuery search);
 
   TTran getTranById(Integer id);
 

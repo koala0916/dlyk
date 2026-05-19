@@ -42,8 +42,29 @@
   <select id="selectByPage" resultMap="BaseResultMap">
     select <include refid="Base_Column_List" /> from t_user tu
     <where>
-      <if test="filterSQL != null and filterSQL != ''">
-        ${filterSQL}
+      <if test="search != null">
+        <if test="search.loginAct != null and search.loginAct != ''">and tu.login_act like concat('%',#{search.loginAct},'%')</if>
+        <if test="search.name != null and search.name != ''">and tu.name like concat('%',#{search.name},'%')</if>
+        <if test="search.phone != null and search.phone != ''">and tu.phone like concat('%',#{search.phone},'%')</if>
+        <if test="search.email != null and search.email != ''">and tu.email like concat('%',#{search.email},'%')</if>
+        <if test="search.createBy != null">and tu.create_by = #{search.createBy}</if>
+        <if test="search.editBy != null">and tu.edit_by = #{search.editBy}</if>
+        <if test="search.accountEnabled != null">and tu.account_enabled = #{search.accountEnabled}</if>
+        <if test="search.createTimeStart != null">and tu.create_time &gt;= #{search.createTimeStart}</if>
+        <if test="search.createTimeEnd != null">and tu.create_time &lt;= #{search.createTimeEnd}</if>
+        <if test="search.createTimePoint != null and search.createTimePointType == 'before'">and tu.create_time &lt;= #{search.createTimePoint}</if>
+        <if test="search.createTimePoint != null and search.createTimePointType == 'after'">and tu.create_time &gt;= #{search.createTimePoint}</if>
+        <if test="search.editTimeStart != null">and tu.edit_time &gt;= #{search.editTimeStart}</if>
+        <if test="search.editTimeEnd != null">and tu.edit_time &lt;= #{search.editTimeEnd}</if>
+        <if test="search.editTimePoint != null and search.editTimePointType == 'before'">and tu.edit_time &lt;= #{search.editTimePoint}</if>
+        <if test="search.editTimePoint != null and search.editTimePointType == 'after'">and tu.edit_time &gt;= #{search.editTimePoint}</if>
+        <if test="search.lastLoginTimeStart != null">and tu.last_login_time &gt;= #{search.lastLoginTimeStart}</if>
+        <if test="search.lastLoginTimeEnd != null">and tu.last_login_time &lt;= #{search.lastLoginTimeEnd}</if>
+        <if test="search.lastLoginTimePoint != null and search.lastLoginTimePointType == 'before'">and tu.last_login_time &lt;= #{search.lastLoginTimePoint}</if>
+        <if test="search.lastLoginTimePoint != null and search.lastLoginTimePointType == 'after'">and tu.last_login_time &gt;= #{search.lastLoginTimePoint}</if>
+      </if>
+      <if test="baseQuery != null and baseQuery.filterSQL != null and baseQuery.filterSQL != ''">
+        ${baseQuery.filterSQL}
       </if>
     </where>
   </select>

@@ -39,6 +39,28 @@
   <select id="selectPage" resultMap="DetailResultMap">
     select tt.*, u.id createByUserId, u.name createByUserName
     from t_tran tt left join t_user u on tt.create_by = u.id
+    <where>
+      <if test="search != null">
+        <if test="search.customerId != null">and tt.customer_id = #{search.customerId}</if>
+        <if test="search.tranNo != null and search.tranNo != ''">and tt.tran_no like concat('%',#{search.tranNo},'%')</if>
+        <if test="search.studentName != null and search.studentName != ''">and tt.student_name like concat('%',#{search.studentName},'%')</if>
+        <if test="search.courseType != null and search.courseType != ''">and tt.course_type like concat('%',#{search.courseType},'%')</if>
+        <if test="search.tranRemark != null and search.tranRemark != ''">and tt.tran_remark like concat('%',#{search.tranRemark},'%')</if>
+        <if test="search.createBy != null">and tt.create_by = #{search.createBy}</if>
+        <if test="search.dealTimeStart != null">and tt.deal_time &gt;= #{search.dealTimeStart}</if>
+        <if test="search.dealTimeEnd != null">and tt.deal_time &lt;= #{search.dealTimeEnd}</if>
+        <if test="search.dealTimePoint != null and search.dealTimePointType == 'before'">and tt.deal_time &lt;= #{search.dealTimePoint}</if>
+        <if test="search.dealTimePoint != null and search.dealTimePointType == 'after'">and tt.deal_time &gt;= #{search.dealTimePoint}</if>
+        <if test="search.createTimeStart != null">and tt.create_time &gt;= #{search.createTimeStart}</if>
+        <if test="search.createTimeEnd != null">and tt.create_time &lt;= #{search.createTimeEnd}</if>
+        <if test="search.createTimePoint != null and search.createTimePointType == 'before'">and tt.create_time &lt;= #{search.createTimePoint}</if>
+        <if test="search.createTimePoint != null and search.createTimePointType == 'after'">and tt.create_time &gt;= #{search.createTimePoint}</if>
+        <if test="search.moneyOp == 'eq' and search.moneyValue != null">and tt.money = #{search.moneyValue}</if>
+        <if test="search.moneyOp == 'gt' and search.moneyValue != null">and tt.money &gt; #{search.moneyValue}</if>
+        <if test="search.moneyOp == 'lt' and search.moneyValue != null">and tt.money &lt; #{search.moneyValue}</if>
+        <if test="search.moneyOp == 'between' and search.moneyMin != null and search.moneyMax != null">and tt.money between #{search.moneyMin} and #{search.moneyMax}</if>
+      </if>
+    </where>
     order by tt.deal_time is null, tt.deal_time desc, tt.id desc
   </select>
 

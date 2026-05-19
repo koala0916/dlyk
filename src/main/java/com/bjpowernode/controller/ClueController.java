@@ -24,8 +24,8 @@ public class ClueController {
   private ClueService clueService;
 
   @GetMapping("/api/clues")
-  public Result clues(Integer current) {
-    PageInfo<TClue> pageInfo = clueService.getClueByPage(current);
+  public Result clues(Integer current, com.bjpowernode.query.ClueSearchQuery search) {
+    PageInfo<TClue> pageInfo = clueService.getClueByPage(current, search);
     return Result.OK(pageInfo);
   }
 

@@ -89,8 +89,16 @@ export const router = createRouter({
                     component:()=>import('../views/TranDetailView.vue')
                 },
                 {
+                    path:'chart/performance',
+                    component:()=>import('../views/chart/PerformanceAnalysisView.vue')
+                },
+                {
+                    path:'chart/analysis',
+                    component:()=>import('../views/chart/DataAnalysisView.vue')
+                },
+                {
                     path:'',
-                    component:()=>import('../views/StatisticsView.vue')
+                    redirect:'/dashboard/chart/performance'
                 },
             ]
         }

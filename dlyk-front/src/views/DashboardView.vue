@@ -107,8 +107,8 @@ const currentRoutePath = () => {
         @open: sub-menu展开的回调
         @closeL sub-menu收起的回调
       -->
-      <el-menu :router="true" active-text-color="#ffd04b" background-color="#545c64" :default-active="routerPath"
-        text-color="#fff" unique-opened style="border-right: 0 solid" v-on:open="handleOpen()" v-on:close="handleClose">
+      <el-menu :router="true" active-text-color="#409eff" background-color="#f0f2f5" :default-active="routerPath"
+        text-color="#5a5e66" unique-opened class="aside-menu" v-on:open="handleOpen()" v-on:close="handleClose">
 
         <!--动态读取菜单-->
     
@@ -160,9 +160,11 @@ const currentRoutePath = () => {
 </template>
 
 <style scoped>
+/* 左侧栏：浅灰背景，与深色菜单区分 */
 .el-aside {
-  background: #1a1a1a;
+  background: #f5f7fa;
   height: calc(100vh);
+  border-right: 1px solid #e4e7ed;
 }
 
 .el-header {
@@ -178,9 +180,24 @@ const currentRoutePath = () => {
 }
 
 .asideTitile {
-  color: #f8f8f8;
+  color: #303133;
+  background: #eef1f6;
   text-align: center;
   height: 35px;
   line-height: 35px;
+  border-bottom: 1px solid #e4e7ed;
+  font-weight: 600;
+}
+
+/* 菜单悬停、选中态 */
+.aside-menu {
+  border-right: none !important;
+}
+:deep(.aside-menu .el-menu-item.is-active) {
+  background-color: #ecf5ff !important;
+}
+:deep(.aside-menu .el-menu-item:hover),
+:deep(.aside-menu .el-sub-menu__title:hover) {
+  background-color: #ebeef5 !important;
 }
 </style>
