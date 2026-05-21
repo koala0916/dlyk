@@ -32,5 +32,7 @@ spring:
 #      password: 123456
       database: 0
 mybatis:
+  # 显式扫描 Mapper XML（含 resources 与 java 目录下的 xml，避免 IDE 直接运行漏打包）
+  mapper-locations: classpath*:com/bjpowernode/mapper/*.xml
   configuration: # 配置打印 MyBatis⽇志
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

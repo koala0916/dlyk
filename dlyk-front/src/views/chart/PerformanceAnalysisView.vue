@@ -3,7 +3,17 @@
     <el-row :gutter="16">
       <el-col :span="24">
         <el-card shadow="hover" class="chart-card">
-          <template #header><span class="card-title">每月交易金额趋势</span></template>
+          <template #header>
+            <div class="card-header-flex">
+              <span class="card-title">每月交易金额趋势</span>
+              <div class="card-tools">
+                <el-select v-model="lineViewMode" style="width: 120px" @change="applyLineChart">
+                  <el-option label="按员工" value="employee" />
+                  <el-option label="全公司" value="company" />
+                </el-select>
+              </div>
+            </div>
+          </template>
           <div ref="lineRef" class="chart-box chart-box-lg" />
         </el-card>
       </el-col>
@@ -55,6 +65,9 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+
+/** 后端返回的公司汇总折线名称 */
+const LINE_TOTAL_NAME = '金额总量'
 import * as echarts from 'echarts'
 import { doGet } from '../../http/httpRequest'
 import { showMessage } from '../../util/message'
@@ -71,6 +84,9 @@ const pieYear = ref(String(new Date().getFullYear()))
 const funnelRange = ref([])
 const funnelUserId = ref(0)
 const owners = ref([])
+/** 折线图视图：employee=各员工多条线，company=仅全公司一条线 */
+const lineViewMode = ref('employee')
+const lineChartRaw = ref(null)
 
 /** 确保 DOM 已有宽高后再初始化，避免折线图容器宽度为 0 导致空白 */
 const ensureLineChart = () => {
@@ -92,13 +108,31 @@ const resize = () => {
   funnelChart?.resize()
 }
 
-const renderLine = (info) => {
+/** 按视图模式筛选折线序列 */
+const filterLineSeries = (series, mode) => {
+  const list = series || []
+  if (mode === 'company') {
+    const total = list.find((s) => s.name === LINE_TOTAL_NAME)
+    return total ? [{ ...total, name: '全公司' }] : []
+  }
+  return list.filter((s) => s.name !== LINE_TOTAL_NAME)
+}
+
+const applyLineChart = () => {
+  const info = lineChartRaw.value
   if (!info) return
   ensureLineChart()
   if (!lineChart) return
-  lineChart.setOption(buildLineOption(info.months, info.series), true)
+  const series = filterLineSeries(info.series, lineViewMode.value)
+  lineChart.setOption(buildLineOption(info.months, series), true)
   requestAnimationFrame(() => lineChart.resize())
   setTimeout(() => lineChart.resize(), 120)
+}
+
+const renderLine = (info) => {
+  if (!info) return
+  lineChartRaw.value = info
+  applyLineChart()
 }
 
 const loadLine = () => {

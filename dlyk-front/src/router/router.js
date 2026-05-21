@@ -17,6 +17,10 @@ export const router = createRouter({
                     component:()=>import('../views/RoleManageView.vue')
                 },
                 {
+                    path:'permission',
+                    component:()=>import('../views/PermissionManageView.vue')
+                },
+                {
                     path:'user',
                     component:()=>import('../views/UserView.vue')
                 },

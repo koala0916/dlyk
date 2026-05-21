@@ -1,11 +1,6 @@
 <script setup>
-import {
-  Aim, Coin,
-  CreditCard, DataAnalysis, Grid,
-  Magnet, Memo, OfficeBuilding,
-  Paperclip, Postcard, Setting, SetUp, Tools,
-  User, UserFilled, Wallet, ArrowDown
-} from "@element-plus/icons-vue";
+import { ArrowDown, Menu as MenuIcon } from "@element-plus/icons-vue";
+import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 
 import { ref, onMounted, nextTick, provide } from "vue";
 
@@ -16,6 +11,15 @@ import { useRoute } from "vue-router";
 
 //定义userInfo对象，用于存储用户信息
 let userInfo = ref({})
+
+/** 将数据库中的 icon 字符串解析为 Element Plus 图标组件 */
+const resolveMenuIcon = (iconName) => {
+  if (!iconName || typeof iconName !== 'string') {
+    return MenuIcon
+  }
+  const key = iconName.trim()
+  return ElementPlusIconsVue[key] || MenuIcon
+}
 
 //页面渲染完成后，发送请求获取用户信息
 onMounted(() => {
@@ -112,16 +116,19 @@ const currentRoutePath = () => {
 
         <!--动态读取菜单-->
     
-        <el-sub-menu :index="index" v-for="(menu, index) in userInfo.tMenuPermissionList">
+        <el-sub-menu :index="String(index)" v-for="(menu, index) in userInfo.tMenuPermissionList" :key="menu.id || index">
           <template #title>
             <el-icon>
-              <component :is="menu.icon" />
+              <component :is="resolveMenuIcon(menu.icon)" />
             </el-icon>
             <span>{{ menu.name }}</span>
           </template>
-          <el-menu-item :index="subMenu.url" v-for="subMenu in menu.childPermissionList"><el-icon>
-              <component :is="subMenu.icon" />
-            </el-icon>{{ subMenu.name }}</el-menu-item>
+          <el-menu-item :index="subMenu.url" v-for="subMenu in menu.childPermissionList" :key="subMenu.id">
+            <el-icon>
+              <component :is="resolveMenuIcon(subMenu.icon)" />
+            </el-icon>
+            <span>{{ subMenu.name }}</span>
+          </el-menu-item>
         </el-sub-menu>
 
       </el-menu>
