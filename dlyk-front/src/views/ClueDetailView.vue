@@ -3,7 +3,19 @@
     <h3>线索详情</h3>
     <el-table :data="detailRows" border stripe>
       <el-table-column prop="label" label="项目" width="200" />
-      <el-table-column prop="value" label="内容" min-width="280" show-overflow-tooltip />
+      <el-table-column label="内容" min-width="280" show-overflow-tooltip>
+        <template #default="{ row }">
+          <!-- 已转客户：姓名可点击跳转到对应学员详情 -->
+          <el-link
+            v-if="row.linkType === 'customer' && row.customerId"
+            type="primary"
+            @click="goCustomer(row.customerId)"
+          >
+            {{ row.value }}
+          </el-link>
+          <span v-else>{{ row.value }}</span>
+        </template>
+      </el-table-column>
     </el-table>
     <h3>编辑记录</h3>
     <el-table :data="editLogs" border stripe empty-text="暂无编辑记录">
@@ -23,6 +35,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { doGet } from '../http/httpRequest'
 import { showMessage } from '../util/message'
+import { pushWithReturn, goBackFromRoute } from '../util/navReturn'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,7 +46,12 @@ const detailRows = computed(() => {
   const c = clue.value
   return [
     { label: 'ID', value: c.id },
-    { label: '姓名', value: c.name },
+    {
+      label: '姓名',
+      value: c.name,
+      linkType: c.customerId ? 'customer' : null,
+      customerId: c.customerId,
+    },
     { label: '电话', value: c.phone },
     { label: '年龄', value: c.age },
     { label: '意向课程', value: c.intentionCourse },
@@ -58,9 +76,16 @@ onMounted(() => {
   })
 })
 
+/** 跳转到学员详情，返回时可回到本线索详情 */
+const goCustomer = (customerId) => {
+  pushWithReturn(router, route, '/dashboard/customer/' + customerId)
+}
+
 const goBack = () => {
-  const page = route.query.page
-  router.push({ path: '/dashboard/clue', ...(page ? { query: { page: String(page) } } : {}) })
+  goBackFromRoute(route, router, {
+    path: '/dashboard/clue',
+    query: { page: String(route.query.page || '1') },
+  })
 }
 </script>
 

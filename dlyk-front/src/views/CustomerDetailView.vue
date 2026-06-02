@@ -42,6 +42,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { doGet } from '../http/httpRequest'
 import { showMessage } from '../util/message'
+import { pushWithReturn, goBackFromRoute } from '../util/navReturn'
 
 const route = useRoute()
 const router = useRouter()
@@ -101,23 +102,25 @@ const loadEditLogs = () => {
   })
 }
 
+/** 查看来源线索，返回时可回到本客户详情 */
 const goClue = (clueId) => {
-  router.push({ path: '/dashboard/clue/' + clueId, query: { page: route.query.page || '1' } })
+  pushWithReturn(router, route, '/dashboard/clue/' + clueId)
 }
 
+/** 查看该客户全部交易（左侧菜单会切到交易管理） */
 const goTranList = (customerId) => {
-  router.push({ path: '/dashboard/tran', query: { customerId: String(customerId), page: '1' } })
+  pushWithReturn(router, route, '/dashboard/tran', { customerId: String(customerId), page: '1' })
 }
 
+/** 查看单笔交易详情 */
 const goTranDetail = (tranId) => {
-  router.push({ path: '/dashboard/tran/' + tranId, query: { page: '1' } })
+  pushWithReturn(router, route, '/dashboard/tran/' + tranId)
 }
 
 const goBack = () => {
-  const page = route.query.page
-  router.push({
+  goBackFromRoute(route, router, {
     path: '/dashboard/customer',
-    ...(page != null && String(page) !== '' ? { query: { page: String(page) } } : {}),
+    query: { page: String(route.query.page || '1') },
   })
 }
 </script>

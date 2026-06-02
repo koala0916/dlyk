@@ -2,7 +2,7 @@
 import { ArrowDown, Menu as MenuIcon } from "@element-plus/icons-vue";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 
-import { ref, onMounted, nextTick, provide } from "vue";
+import { ref, onMounted, nextTick, provide, watch } from "vue";
 
 import { doGet } from "../http/httpRequest";
 import { TOKEN_NAME } from "../util/constant";
@@ -21,9 +21,22 @@ const resolveMenuIcon = (iconName) => {
   return ElementPlusIconsVue[key] || MenuIcon
 }
 
+const route = useRoute()
+
+/** 根据当前 URL 高亮左侧菜单（与右侧内容模块一致） */
+const syncMenuActive = () => {
+  const tempPath = route.path
+  const tempArr = tempPath.split("/")
+  if (tempArr.length > 3) {
+    routerPath.value = "/" + tempArr[1] + "/" + tempArr[2]
+  } else {
+    routerPath.value = tempPath
+  }
+}
+
 //页面渲染完成后，发送请求获取用户信息
 onMounted(() => {
-  currentRoutePath()
+  syncMenuActive()
   //发送请求获取用户信息
   doGet('/api/login/user', {}).then((response) => {
     //判断请求是否成功
@@ -80,20 +93,10 @@ provide('flush', reload)
 //激活当前选中的菜单
 let routerPath = ref('')
 
-//监听路由变化，获取当前路由的path
-const currentRoutePath = () => {
-  //获取当前路由的path
-  let tempPath = useRoute().path
-
-  //解决三级目录页面刷新的问题  例如/dashboard/user/input  刷新后会变成/dashboard/user
-  let tempArr = tempPath.split("/")
-  if (tempArr.length > 3) {
-    routerPath.value = "/" + tempArr[1] + "/" + tempArr[2]  //  /dashboard/user
-  } else {
-    routerPath.value = tempPath
-  }
-
-}
+// 路由变化时同步菜单高亮（例如从客户详情跳到交易列表）
+watch(() => route.path, () => {
+  syncMenuActive()
+})
 
 </script>
 

@@ -152,6 +152,7 @@ import { buildSearchParams } from '../util/searchParams'
 import SearchNumberRange from '../components/search/SearchNumberRange.vue'
 import SearchDateField from '../components/search/SearchDateField.vue'
 import SearchFormActions from '../components/search/SearchFormActions.vue'
+import { pushWithReturn } from '../util/navReturn'
 
 const defaultSearch = () => ({
   name: '', phone: '', intentionCourse: '', source: '', remark: '', clueStatus: null, createBy: null,
@@ -206,7 +207,7 @@ const toPage = (current) => {
 }
 
 const goCustomer = (customerId) => {
-  router.push({ path: '/dashboard/customer/' + customerId, query: { page: String(currentPage.value) } })
+  pushWithReturn(router, route, '/dashboard/customer/' + customerId)
 }
 
 const isWarningRow = (row) => {
@@ -225,7 +226,7 @@ const chooseExportExcel = () => {
 }
 
 const addClue = () => router.push({ path: '/dashboard/clue/input', query: { page: String(currentPage.value) } })
-const view = (id) => router.push({ path: '/dashboard/clue/' + id, query: { page: String(currentPage.value) } })
+const view = (id) => pushWithReturn(router, route, '/dashboard/clue/' + id, { page: String(currentPage.value) })
 const edit = (id) => router.push({ path: '/dashboard/clue/edit/' + id, query: { page: String(currentPage.value) } })
 
 const del = (id) => {

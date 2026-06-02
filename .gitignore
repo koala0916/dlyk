@@ -10,3 +10,8 @@
 .idea/
 *.iml
 .vscode/
+
+# Python 运行缓存（勿提交）
+__pycache__/
+*.pyc
+scripts/__pycache__/

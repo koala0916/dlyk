@@ -56,6 +56,7 @@
   </el-card>
 
   <div class="tran-toolbar">
+    <el-button v-if="showReturnBtn" plain @click="goBackToPrev">返回上一页</el-button>
     <el-button type="primary" @click="addTran">添加交易</el-button>
     <el-button type="success" @click="batchExport">批量导出(Excel)</el-button>
     <el-button type="success" @click="chooseExport">选择导出(Excel)</el-button>
@@ -93,7 +94,7 @@
 
 <script setup>
 import { View, Edit, Delete } from '@element-plus/icons-vue'
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, inject, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { doGet, doDelete, download } from '../http/httpRequest'
 import { showMessage, confirmMessage } from '../util/message'
@@ -102,6 +103,7 @@ import { buildSearchParams } from '../util/searchParams'
 import SearchNumberRange from '../components/search/SearchNumberRange.vue'
 import SearchDateField from '../components/search/SearchDateField.vue'
 import SearchFormActions from '../components/search/SearchFormActions.vue'
+import { pushWithReturn, goBackFromRoute, hasReturnFrom, NAV_FROM_KEY } from '../util/navReturn'
 
 const defaultSearch = () => ({
   tranNo: '', studentName: '', courseType: '', tranRemark: '', createBy: null, customerId: null,
@@ -135,10 +137,15 @@ onMounted(() => {
   load(currentPage.value)
 })
 
+const showReturnBtn = computed(() => hasReturnFrom(route))
+
 const buildRouteQuery = (current) => {
   const q = { page: String(current) }
   if (search.value.customerId != null && search.value.customerId !== '') {
     q.customerId = String(search.value.customerId)
+  }
+  if (route.query[NAV_FROM_KEY]) {
+    q[NAV_FROM_KEY] = String(route.query[NAV_FROM_KEY])
   }
   return q
 }
@@ -165,7 +172,7 @@ const toPage = (c) => {
 }
 
 const goCustomer = (customerId) => {
-  router.push({ path: '/dashboard/customer/' + customerId, query: { page: String(currentPage.value) } })
+  pushWithReturn(router, route, '/dashboard/customer/' + customerId)
 }
 
 const onSelect = (rows) => { ids = rows.map((x) => x.id) }
@@ -176,7 +183,7 @@ const chooseExport = () => {
 }
 
 const addTran = () => router.push({ path: '/dashboard/tran/input', query: { page: String(currentPage.value) } })
-const view = (id) => router.push({ path: '/dashboard/tran/' + id, query: { page: String(currentPage.value) } })
+const view = (id) => pushWithReturn(router, route, '/dashboard/tran/' + id, { page: String(currentPage.value) })
 const edit = (id) => router.push({ path: '/dashboard/tran/edit/' + id, query: { page: String(currentPage.value) } })
 
 const del = (id) => {

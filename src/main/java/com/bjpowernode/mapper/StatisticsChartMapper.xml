@@ -79,8 +79,14 @@
     <if test="userId != null and userId &gt; 0">and tt.create_by = #{userId}</if>
   </select>
 
-  <select id="selectCustomersForAnalysis" resultType="com.bjpowernode.entity.TCustomer">
-    select * from t_customer
+  <!-- 与客户列表一致：联表带出创建人，避免 resultType 下 create_by 映射不到 createBy -->
+  <select id="selectCustomersForAnalysis" resultMap="com.bjpowernode.mapper.TCustomerMapper.DetailResultMap">
+    select
+      tc.*,
+      u.id createByUserId,
+      u.name createByUserName
+    from t_customer tc
+      left join t_user u on tc.create_by = u.id
     <where>
       <if test="sources != null and sources.size() &gt; 0">
         and source in
@@ -109,8 +115,13 @@
     </where>
   </select>
 
-  <select id="selectCluesForAnalysis" resultType="com.bjpowernode.entity.TClue">
-    select * from t_clue
+  <select id="selectCluesForAnalysis" resultMap="com.bjpowernode.mapper.TClueMapper.DetailResultMap">
+    select
+      tc.*,
+      u.id createByUserId,
+      u.name createByUserName
+    from t_clue tc
+      left join t_user u on tc.create_by = u.id
     <where>
       <if test="sources != null and sources.size() &gt; 0">
         and source in <foreach collection="sources" item="s" open="(" separator="," close=")">#{s}</foreach>

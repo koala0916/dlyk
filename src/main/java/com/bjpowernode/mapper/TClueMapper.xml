@@ -34,9 +34,12 @@
     select <include refid="Base_Column_List" /> from t_clue where id = #{id}
   </select>
 
+  <!-- 详情与列表一致：关联客户 ID，供前端点击姓名跳转学员详情 -->
   <select id="selectDetailById" resultMap="DetailResultMap">
-    select tc.*, u.id createByUserId, u.name createByUserName
-    from t_clue tc left join t_user u on tc.create_by = u.id
+    select tc.*, u.id createByUserId, u.name createByUserName, tcust.id linked_customer_id
+    from t_clue tc
+      left join t_user u on tc.create_by = u.id
+      left join t_customer tcust on tcust.clue_id = tc.id
     where tc.id = #{id}
   </select>
 

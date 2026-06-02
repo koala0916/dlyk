@@ -64,11 +64,8 @@ public class DataScopeAspect {
 //                        and ${tableAlis}.${columnName}=currentLoginUser.getId()
 //                        """;
                 baseQuery.setFilterSQL(" and " + tableAlias + "." + columnName + "=" + currentLoginUser.getId());
-
             }
-
         }
-
         Object proceed = joinPoint.proceed();
         return proceed;
 
